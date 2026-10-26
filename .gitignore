@@ -1,0 +1,22 @@
+# Secrets and API session cache (never commit)
+.env
+.env-
+.env.*
+!.env.example
+.eptr2-tgt*
+
+# Data: everyone downloads it from EPİAŞ with scripts/fetch_data.py
+data/
+
+# Models and large artifacts
+models/
+
+# Personal working notes and trial scripts
+CLAUDE.md
+archive/
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/

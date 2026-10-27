@@ -46,6 +46,7 @@ data/           raw / interim / processed data (not committed)
 pip install -r requirements.txt
 cp .env.example .env            # then fill in your EPİAŞ account
 python -m scripts.fetch_data    # downloads all tables into data/raw/
+python -m scripts.build_dataset # cleans and joins them into data/processed/ptf_hourly.parquet
 python -m pytest                # runs the tests
 ```
 
@@ -54,7 +55,8 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 ## Roadmap
 
 - [x] Data inventory and download pipeline
-- [ ] Price (PTF) data preparation and exploratory analysis
+- [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
+- [ ] Price (PTF) exploratory analysis
 - [ ] Consumption analysis
 - [ ] Forecasting models (classical ML and deep learning)
 - [ ] Demo application

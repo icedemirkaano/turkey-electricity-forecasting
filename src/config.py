@@ -12,6 +12,21 @@ FIGURES_DIR = ROOT / "reports" / "figures"
 TIMEZONE = "Europe/Istanbul"
 START_MONTH = "2023-01"  # first month of the dataset
 
+# Maximum price limit (cap) of the day-ahead and balancing power markets, TL/MWh, by first delivery day.
+# Source: EPİAŞ announcements of EPDK Board decisions; minimum limit is 0 TL/MWh throughout.
+# Checked against the data (scripts/check_price_caps.py): every monthly maximum equals the cap, no hour above it.
+PRICE_CAPS = [
+    ("2023-01-01", 4200),  # Kurul Kararı 11499, 29.12.2022
+    ("2023-02-01", 3650),  # Kurul Kararı 11588, 26.01.2023
+    ("2023-03-01", 3050),  # Kurul Kararı 11682, 28.02.2023
+    ("2023-04-01", 2600),  # Kurul Kararı 11772, 30.03.2023
+    ("2023-07-04", 2700),  # Kurul Kararı 11933, 03.07.2023
+    ("2024-07-01", 3000),  # Kurul Kararı 12716, 27.06.2024
+    ("2025-04-05", 3400),  # Kurul Kararı 13423, 27.03.2025
+    ("2026-04-04", 4500),  # Kurul Kararı 14459, 02.04.2026
+]
+PRICE_FLOOR = 0
+
 # EPİAŞ Transparency Platform tables (eptr2 call keys) used in the price (PTF) phase.
 # Descriptions follow EPİAŞ's own definitions.
 TABLES = {

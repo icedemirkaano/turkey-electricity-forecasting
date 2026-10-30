@@ -1,15 +1,12 @@
 # Turkey Electricity Forecasting
 
-Forecasting next-day **hourly electricity prices (PTF)** and **consumption** in the Turkish electricity market, using public data from the [EPİAŞ Transparency Platform](https://seffaflik.epias.com.tr).
+Forecasting next-day **hourly electricity prices (PTF)** in the Turkish day-ahead electricity market, using public data from the [EPİAŞ Transparency Platform](https://seffaflik.epias.com.tr).
 
 > 🚧 Work in progress — capstone project of the Workintech Data Science bootcamp.
 
 ## Problem
 
-An electricity supplier has to answer two questions every day, before the day-ahead market closes:
-
-1. **How much** electricity will its customers consume tomorrow, hour by hour?
-2. **At what price** will it buy that electricity? In the day-ahead market, the price of each hour of the next day is set separately.
+An electricity supplier buys most of tomorrow's electricity in the day-ahead market, where the price of each hour of the next day is set separately. Knowing **at what price** each hour is likely to clear — and which hours will be cheap or expensive — drives its buying cost and risk. This project forecasts those 24 hourly prices. Expected demand enters as an input through EPİAŞ's own next-day load forecast.
 
 Offers for the next day are due by 12:30, and the next day's 24 hourly prices are announced at 14:00. A useful forecast must therefore be made before 12:30, using only the information available at that moment.
 
@@ -57,9 +54,10 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Data inventory and download pipeline
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
 - [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
-- [ ] Consumption analysis
-- [ ] Forecasting models (classical ML and deep learning)
+- [ ] Price forecasting models (classical ML and deep learning)
+- [ ] Business layer: buying cost and imbalance cost
 - [ ] Demo application
+- [ ] _Future work:_ consumption forecasting (national hourly demand)
 
 ## Data source
 

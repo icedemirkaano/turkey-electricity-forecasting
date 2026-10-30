@@ -229,3 +229,17 @@ def yearly_summary(table: pd.DataFrame) -> pd.DataFrame:
     out["implied_try_per_usd"] = (table.loc[positive, "ptf_try"] / table.loc[positive, "ptf_usd"]).groupby(
         year[positive]).median()
     return out.round(2)
+
+
+def feature_importance_bars(importance: pd.Series, title: str):
+    """Horizontal bars of feature importance shares, largest on top."""
+    fig, ax = plt.subplots(figsize=(9, 0.35 * len(importance) + 1), facecolor=SURFACE)
+    ordered = importance.sort_values()
+    ax.barh(ordered.index, ordered.values, color=BLUE)
+    for y, value in enumerate(ordered.values):
+        ax.text(value, y, f" {value:.1%}", va="center", fontsize=8, color=MUTED)
+    style(ax, title, xlabel="share of total gain")
+    ax.grid(False)
+    ax.grid(axis="x", color=GRID, linewidth=0.8)
+    fig.tight_layout()
+    return fig

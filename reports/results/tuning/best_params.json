@@ -1,0 +1,25 @@
+{
+  "xgboost": {
+    "n_estimators": 441,
+    "learning_rate": 0.020069396309240147,
+    "max_depth": 7,
+    "min_child_weight": 16,
+    "subsample": 0.9063004479536095,
+    "colsample_bytree": 0.661016768928983,
+    "reg_lambda": 0.001272064664999572,
+    "objective": "reg:absoluteerror"
+  },
+  "hist gradient boosting": {
+    "max_iter": 995,
+    "learning_rate": 0.01133871766741266,
+    "max_leaf_nodes": 31,
+    "min_samples_leaf": 22,
+    "l2_regularization": 0.2819580521515294,
+    "loss": "absolute_error"
+  },
+  "random forest": {
+    "n_estimators": 344,
+    "min_samples_leaf": 5,
+    "max_features": 0.3480302762230042
+  }
+}

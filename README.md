@@ -56,7 +56,7 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 
 - [x] Data inventory and download pipeline
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
-- [ ] Price (PTF) exploratory analysis
+- [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
 - [ ] Consumption analysis
 - [ ] Forecasting models (classical ML and deep learning)
 - [ ] Demo application

@@ -53,3 +53,12 @@ def test_scores_by_month():
     index = pd.date_range("2026-01-31 23:00", periods=2, freq="h", tz=TZ)   # one hour in Jan, one in Feb
     by_month = scores_by_month(pd.Series([1.0, 1.0], index=index), pd.Series([3.0, 0.0], index=index))
     assert by_month.loc["2026-01", "mae"] == 2 and by_month.loc["2026-02", "mae"] == 1
+
+
+def test_weekly_retrain_windows_cover_the_period_once():
+    from src.evaluation import retrain_windows
+    windows = retrain_windows("2026-01-01", "2026-09-30", "week")
+    assert windows[0] == (pd.Timestamp("2026-01-01"), pd.Timestamp("2026-01-04"))   # Thursday .. Sunday
+    assert all(s.dayofweek == 0 for s, _ in windows[1:])                          # later ones start on Monday
+    days = sum((e - s).days + 1 for s, e in windows)
+    assert days == 273 and len(windows) == 40

@@ -56,16 +56,17 @@ def hourly_inputs(table: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.S
     return seq, future, source[TARGET]
 
 
-def day_samples(table: pd.DataFrame, first_day: str, last_day: str) -> DaySamples:
-    """Samples for target days first_day..last_day (both included). Days with missing values are skipped."""
+def day_samples(table: pd.DataFrame, first_day: str, last_day: str, seq_hours: int = SEQ_HOURS) -> DaySamples:
+    """Samples for target days first_day..last_day (both included). Days with missing values are skipped.
+    seq_hours: length of the past sequence (a multiple of 24, so the last 24 steps are always day D)."""
     seq, future, target = hourly_inputs(table)
     days = pd.date_range(first_day, last_day, freq="D", tz=TIMEZONE)
     out = {"seq": [], "future": [], "target": [], "days": []}
     for day in days:
-        window = seq.loc[day - SEQ_HOURS * HOUR: day - HOUR]          # ends at D 23:00
+        window = seq.loc[day - seq_hours * HOUR: day - HOUR]          # ends at D 23:00
         ahead = future.loc[day: day + 23 * HOUR]
         values = target.loc[day: day + 23 * HOUR]
-        if len(window) != SEQ_HOURS or len(ahead) != 24 or len(values) != 24:
+        if len(window) != seq_hours or len(ahead) != 24 or len(values) != 24:
             continue
         if window.isna().any().any() or ahead.isna().any().any() or values.isna().any():
             continue

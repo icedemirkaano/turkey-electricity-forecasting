@@ -76,3 +76,15 @@ BASELINES = {"same hour yesterday": "ptf_usd_lag24", "same hour last week": "ptf
 
 def baseline_forecast(X: pd.DataFrame, name: str) -> pd.Series:
     return X[BASELINES[name]].rename(name)
+
+
+# Retraining windows (post-hoc experiments): pandas frequency of the first day of each window
+RETRAIN_WINDOW_STARTS = {"month": "MS", "week": "W-MON"}
+
+
+def retrain_windows(first: str, last: str, every: str) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
+    """(first day, last day) of each retraining window between two dates (weeks start on Monday)."""
+    start, end = pd.Timestamp(first), pd.Timestamp(last)
+    starts = sorted({start, *pd.date_range(start, end, freq=RETRAIN_WINDOW_STARTS[every])})
+    ends = [s - pd.Timedelta(days=1) for s in starts[1:]] + [end]
+    return list(zip(starts, ends))

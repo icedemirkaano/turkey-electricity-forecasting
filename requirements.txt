@@ -11,3 +11,4 @@ xgboost==2.1.4
 optuna==5.0.0
 tensorflow==2.16.2
 keras==3.11.3
+prophet==1.5.0

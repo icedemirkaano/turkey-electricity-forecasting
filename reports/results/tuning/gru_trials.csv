@@ -1,0 +1,2 @@
+number,value,datetime_start,datetime_complete,duration,params_batch_size,params_dropout,params_layers,params_learning_rate,params_seq_hours,params_units,user_attrs_fold_mae,state
+0,9.440509286767677,2026-11-02 15:47:26.411741,2026-11-02 15:49:35.532697,0 days 00:02:09.120956,64,0.3464704583099741,1,0.0007725378389307352,168,16,"{'2025Q1': 7.811, '2025Q2': 15.438, '2025Q3': 7.127, '2025Q4': 7.386}",COMPLETE

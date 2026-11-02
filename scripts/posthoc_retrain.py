@@ -19,22 +19,13 @@ import json
 import pandas as pd
 
 from src.config import PROCESSED_DIR, ROOT
-from src.evaluation import TEST_PERIOD, period, scores, scores_by_month
+from src.evaluation import RETRAIN_WINDOW_STARTS, TEST_PERIOD, period, retrain_windows, scores, scores_by_month
 from src.features import MODEL_START, build_features
 from src.models import fit, predict
 
 RESULTS = ROOT / "reports" / "results"
 OUT_DIR = RESULTS / "posthoc"
 PARAMS = RESULTS / "tuning" / "best_params.json"
-WINDOW_STARTS = {"month": "MS", "week": "W-MON"}   # pandas frequency of the first day of each window
-
-
-def windows(every: str) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
-    """(first day, last day) of each retraining window inside the test period."""
-    first, last = pd.Timestamp(TEST_PERIOD[0]), pd.Timestamp(TEST_PERIOD[1])
-    starts = sorted({first, *pd.date_range(first, last, freq=WINDOW_STARTS[every])})
-    ends = [s - pd.Timedelta(days=1) for s in starts[1:]] + [last]
-    return list(zip(starts, ends))
 
 
 def read_hourly(path, tz):
@@ -45,7 +36,7 @@ def read_hourly(path, tz):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--every", choices=list(WINDOW_STARTS), default="month")
+    parser.add_argument("--every", choices=list(RETRAIN_WINDOW_STARTS), default="month")
     args = parser.parse_args()
     pd.set_option("display.width", 200)
     name = f"xgboost ({args.every}ly retrain, post-hoc)"
@@ -55,7 +46,7 @@ def main():
     flags = table[["is_price_floor", "is_price_cap"]]
 
     parts = []
-    for start, end in windows(args.every):
+    for start, end in retrain_windows(*TEST_PERIOD, args.every):
         first, last = start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
         train_last = (start - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
         model = fit("xgboost", period(X, MODEL_START, train_last), period(y, MODEL_START, train_last), **params)

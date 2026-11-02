@@ -46,10 +46,12 @@ class Standardiser:
         return values * self.std + self.mean
 
 
-def build_model(seq_shape, future_shape, units, dropout, learning_rate) -> keras.Model:
+def build_model(seq_shape, future_shape, units, dropout, learning_rate, n_layers=1) -> keras.Model:
     seq_in = keras.Input(shape=seq_shape, name="past_week")
     future_in = keras.Input(shape=future_shape, name="next_day")
-    past = layers.GRU(units, dropout=dropout)(seq_in)
+    past = seq_in
+    for i in range(n_layers):   # stacked GRUs: all but the last pass the whole sequence on
+        past = layers.GRU(units, dropout=dropout, return_sequences=i < n_layers - 1)(past)
     ahead = layers.Dense(32, activation="relu")(layers.Flatten()(future_in))
     x = layers.Concatenate()([past, ahead])
     x = layers.Dropout(dropout)(layers.Dense(64, activation="relu")(x))
@@ -60,6 +62,7 @@ def build_model(seq_shape, future_shape, units, dropout, learning_rate) -> keras
 
 def fit_gru(train: DaySamples, seed: int, settings=GRU_SETTINGS) -> dict:
     """Train on `train`. The last early_stop_fraction of its days (in time order) decide when to stop."""
+    keras.backend.clear_session()   # free earlier models (the tuning search trains many in one process)
     keras.utils.set_random_seed(seed)
     goal = train.target - baseline_part(train) if settings["residual"] else train.target
     seq_scale, future_scale = Standardiser().fit(train.seq), Standardiser().fit(train.future)
@@ -69,7 +72,7 @@ def fit_gru(train: DaySamples, seed: int, settings=GRU_SETTINGS) -> dict:
 
     cut = int(len(y) * (1 - settings["early_stop_fraction"]))   # samples are in day order
     model = build_model(seq.shape[1:], future.shape[1:], settings["units"], settings["dropout"],
-                        settings["learning_rate"])
+                        settings["learning_rate"], settings.get("layers", 1))
     stop = keras.callbacks.EarlyStopping(patience=settings["patience"], restore_best_weights=True)
     start = time.time()
     history = model.fit([seq[:cut], future[:cut]], y[:cut], validation_data=([seq[cut:], future[cut:]], y[cut:]),

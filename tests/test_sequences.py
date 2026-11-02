@@ -50,6 +50,22 @@ def test_days_with_missing_values_are_skipped():
     assert pd.Timestamp("2024-01-13", tz=TZ) in s.days                # past week no longer reaches the gap
 
 
+@pytest.mark.parametrize("seq_hours", [72, 336])
+def test_other_history_lengths_still_end_at_day_d(seq_hours):
+    t, index = table()
+    s = day_samples(t, "2024-01-20", "2024-01-20", seq_hours)
+    target_start = index.get_loc(pd.Timestamp("2024-01-20", tz=TZ))
+    assert s.seq.shape[1] == seq_hours and s.seq[0, -1, 0] == target_start - 1
+
+
+def test_two_layer_gru_trains():
+    from src.gru import GRU_RESIDUAL_SETTINGS, fit_gru, predict_gru
+    t, _ = table()
+    train, val = day_samples(t, "2024-01-01", "2024-02-15"), day_samples(t, "2024-02-16", "2024-02-29")
+    bundle = fit_gru(train, seed=0, settings={**GRU_RESIDUAL_SETTINGS, "max_epochs": 2, "units": 8, "layers": 2})
+    assert np.isfinite(predict_gru(bundle, val)).all()
+
+
 def test_baseline_part_is_the_same_hour_yesterday():
     from src.gru import baseline_part
     t, _ = table()

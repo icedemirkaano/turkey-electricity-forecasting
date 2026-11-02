@@ -25,16 +25,110 @@ Hourly data from January 2023 onwards, downloaded with the EPİAŞ web service (
 | `rt-gen` | Real-time generation by source |
 | `wind-forecast` | Wind generation forecast with quantile bands |
 
+## Forecasting setup
+
+**Target.** The 24 hourly prices of day D+1 in USD/MWh, forecast on day D before the 12:30 offer deadline.
+
+**Inputs (16), only what is known at forecast time.** Every input is checked against an availability rule in code (`src/features.py`), so a feature that would leak future information raises an error:
+
+| Group | Inputs | Why it is known in time |
+|---|---|---|
+| Past prices | same hour yesterday, 2 days ago and last week; yesterday's daily mean | Day D's prices were published on D-1 at 14:00 |
+| Next-day forecasts | EPİAŞ load forecast, wind forecast, net load (load − wind), price cap | Published for D+1 before the deadline |
+| Past solar generation | same hour 2 days ago and last week | Realised generation is known up to D-1 |
+| Calendar | hour, day of week, weekend, month, official holidays, holiday-eve afternoon | Known in advance |
+
+**Evaluation.** All models are scored on the same periods, with the same metric:
+
+- **Validation (model choice and tuning):** quarterly walk-forward over 2025. Training always starts in January 2024 and ends the day before each validated quarter.
+- **Test:** January–September 2026, scored **once**, after the model was fixed.
+- **Demo:** October 2026 onwards, never used for training or model choice.
+- **Metric:** mean absolute error (MAE, USD/MWh), the average size of an hourly price error. RMSE and MAE on price-floor hours (price = 0) and price-cap hours are reported alongside.
+- **Baseline to beat:** *same hour yesterday*, a forecast anyone has for free.
+
+## Results
+
+### Model choice (validation, 2025)
+
+Mean MAE over the four 2025 quarters (USD/MWh, lower is better):
+
+| Model | Default settings | Tuned (Optuna) |
+|---|---|---|
+| Dummy (training median) | 13.98 | – |
+| Same hour last week | 10.28 | – |
+| **Same hour yesterday (baseline)** | **10.14** | – |
+| Ridge regression | 8.97 | – |
+| Random forest | 7.27 | 7.12 |
+| HistGradientBoosting | 7.15 | 6.96 |
+| **XGBoost** | 7.19 | **6.88** |
+| GRU (last 168 hours → next 24 hours) | 10.47 | – |
+| GRU, learning the deviation from the baseline | 8.92 | – |
+
+- **Chosen model: tuned XGBoost**, 32% below the baseline's error.
+- The three tree-based models were close. XGBoost had the lowest mean error and was the fastest of the three to train.
+- The GRU did not get close. One sample is one forecast day, so the network had only 366–639 training days. Learning the deviation from the baseline instead of the price itself helped, but did not close the gap.
+
+The model relies mostly on past prices (about 59% of the total gain) and on the next-day load and wind forecasts (about 20%):
+
+![Feature importance](reports/figures/models/01_xgb_feature_importance.png)
+
+### Test (January–September 2026, scored once)
+
+| Forecast | MAE | RMSE | vs. baseline |
+|---|---|---|---|
+| **XGBoost, trained once on 2024–2025** | **18.57** | 24.62 | **52% worse** |
+| Same hour yesterday | 12.22 | 18.55 | – |
+| Same hour last week | 14.08 | 21.10 | 15% worse |
+
+**The model failed on the test period.** It beat the baseline in five of nine months: January, February and July–September. From March to June it was far worse. From February to June it forecast too high every month, by 14–33 USD/MWh on average.
+
+The cause is a market situation the model had never seen:
+
+- In spring 2026 prices stayed low for weeks, with **395 price-floor hours** (price = 0) in nine months. The whole training period (2024–2025) had **46**.
+- In 2024–2025 low prices did not last, and the model had learned that a low price is followed by a higher one.
+
+![Daily mean price, actual vs forecasts](reports/figures/models/02_test_daily_actual_vs_forecasts.png)
+
+The failure is specific to low prices. In the 60–80 USD/MWh range, the most common price level in the test period, the model's error was about half the baseline's (5.3 vs 11.0). Below 20 USD/MWh it was far worse (37.3 vs 9.8):
+
+![MAE by actual price level](reports/figures/models/05_test_mae_by_price_level.png)
+
+### Post-hoc experiment: retraining frequency
+
+> ⚠️ This experiment was decided **after** the test result was known, so it is not the project's test result. Every retraining frequency that was tried is reported here.
+
+Same features, same tuned settings, no new tuning. The model is retrained regularly on all data up to the day before each period it forecasts, as a model in daily use would be:
+
+| Forecast | MAE | vs. baseline | Months better than baseline |
+|---|---|---|---|
+| Trained once (reported test result) | 18.57 | 52% worse | 5 of 9 |
+| Retrained every month | 10.89 | 11% better | 7 of 9 |
+| Retrained every week | 9.64 | 21% better | 9 of 9 |
+| Same hour yesterday | 12.22 | – | – |
+
+Under weekly retraining, April and May were only marginally better than the baseline (11.55 vs 12.04, 7.50 vs 7.54).
+
+**Practical conclusion:** the model is the same in all three rows; only the update frequency changes. A price model like this must be retrained at least weekly. A single training run is not enough when the market changes.
+
+### Limitations
+
+- The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
+- No weather or hydro reservoir data is used. Hydro had an unusually large share of generation in spring 2026.
+- Prices are modelled in USD using EPİAŞ's own USD price column; the exchange rate source behind it is not documented here.
+- Solar generation in the real-time generation table is a small share of the total (about 1–4%). Whether it covers all unlicensed solar plants has not been verified.
+
 ## Project structure
 
 ```
-src/            reusable code (config, data fetching, cleaning)
-scripts/        command-line entry points
-notebooks/      analysis notebooks, one per phase
-tests/          unit tests for src/
-reports/figures charts used in this README
-app/            demo application (planned)
-data/           raw / interim / processed data (not committed)
+src/              reusable code (data, features, evaluation, models)
+scripts/          command-line entry points
+notebooks/        analysis notebooks, one per phase
+tests/            unit tests for src/
+reports/figures/  charts used in this README
+reports/results/  scores and predictions (CSV)
+app/              demo application (planned)
+data/             raw / interim / processed data (not committed)
+models/           trained models (not committed)
 ```
 
 ## How to run
@@ -47,6 +141,19 @@ python -m scripts.build_dataset # cleans and joins them into data/processed/ptf_
 python -m pytest                # runs the tests
 ```
 
+Models and results, in order (each step writes its results to `reports/results/`):
+
+```bash
+python -m scripts.evaluate_baselines           # baseline scores on the 2025 validation quarters
+python -m scripts.compare_models               # all models with default settings
+python -m scripts.tune_models                  # Optuna search (about 25 minutes)
+python -m scripts.evaluate_gru                 # GRU variants
+python -m scripts.train_final_xgboost          # final model on 2024-2025 -> models/
+python -m scripts.evaluate_test                # the one-time test score
+python -m scripts.posthoc_retrain --every week # post-hoc retraining experiment (also: --every month)
+python -m scripts.analyse_errors               # error analysis figures
+```
+
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
 
 ## Roadmap
@@ -54,9 +161,10 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Data inventory and download pipeline
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
 - [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
-- [ ] Price forecasting models (classical ML and deep learning)
+- [x] Price forecasting models (classical ML and deep learning), test and error analysis
 - [ ] Business layer: buying cost and imbalance cost
 - [ ] Demo application
+- [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; hydro reservoir inputs
 - [ ] _Future work:_ consumption forecasting (national hourly demand)
 
 ## Data source

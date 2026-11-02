@@ -8,7 +8,7 @@ Compares the reported (frozen) model, the post-hoc monthly retrained model and t
   4. MAE by actual price level (is the model weak at low prices?)
   5. the 10 worst days of the reported model
 Figures: reports/figures/models/02-05. Tables: reports/results/error_analysis/.
-Usage (from the repository root, after evaluate_test and posthoc_monthly_retrain):
+Usage (from the repository root, after evaluate_test and posthoc_retrain):
     python -m scripts.analyse_errors
 """
 

@@ -243,3 +243,33 @@ def feature_importance_bars(importance: pd.Series, title: str):
     ax.grid(axis="x", color=GRID, linewidth=0.8)
     fig.tight_layout()
     return fig
+
+
+# Forecast comparison charts (error analysis, Phase 3.6). `forecasts` maps a display name to (column, color).
+def daily_forecast_comparison(predictions: pd.DataFrame, forecasts: dict, title: str):
+    """Daily mean of the actual price and of each forecast over the test period."""
+    daily = predictions.resample("D").mean(numeric_only=True)
+    fig, ax = plt.subplots(figsize=(12, 4.5), facecolor=SURFACE)
+    ax.plot(daily.index, daily["actual"], color=INK, linewidth=1.6, label="actual")
+    for label, (column, color) in forecasts.items():
+        ax.plot(daily.index, daily[column], color=color, linewidth=1.1, label=label)
+    style(ax, title, ylabel="USD/MWh (daily mean)")
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y", tz=TIMEZONE))
+    ax.legend(frameon=False, fontsize=9)
+    fig.tight_layout()
+    return fig
+
+
+def grouped_bars(values: pd.DataFrame, forecasts: dict, title: str, xlabel: str, ylabel="MAE (USD/MWh)"):
+    """Grouped bars: one group per row of `values` (e.g. hour or price bin), one bar per forecast."""
+    fig, ax = plt.subplots(figsize=(12, 4.5), facecolor=SURFACE)
+    width = 0.8 / len(forecasts)
+    positions = np.arange(len(values))
+    for i, (label, (column, color)) in enumerate(forecasts.items()):
+        ax.bar(positions + (i - (len(forecasts) - 1) / 2) * width, values[column], width, color=color, label=label)
+    ax.set_xticks(positions, [str(i) for i in values.index])
+    ax.axhline(0, color=MUTED, linewidth=0.8)
+    style(ax, title, ylabel=ylabel, xlabel=xlabel)
+    ax.legend(frameon=False, fontsize=9)
+    fig.tight_layout()
+    return fig

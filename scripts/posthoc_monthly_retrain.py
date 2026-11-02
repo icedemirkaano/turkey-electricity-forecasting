@@ -5,7 +5,8 @@ This script asks a different question: what if the model had been retrained ever
 daily use would be? Same features, same tuned settings, no new tuning. For each test month M, the model
 is trained on everything from MODEL_START to the last day before M, then forecasts M. No data from M or
 later is used for training. January's model is identical to the frozen one, so January should match.
-Outputs (reports/results/posthoc/): monthly_retrain_scores.csv, monthly_retrain_by_month.csv
+Outputs (reports/results/posthoc/): monthly_retrain_scores.csv, monthly_retrain_by_month.csv,
+monthly_retrain_predictions.csv
 Usage (from the repository root):
     python -m scripts.posthoc_monthly_retrain
 """
@@ -61,6 +62,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     overall.to_csv(OUT_DIR / "monthly_retrain_scores.csv", index_label="model")
     by_month.to_csv(OUT_DIR / "monthly_retrain_by_month.csv")
+    retrained.to_csv(OUT_DIR / "monthly_retrain_predictions.csv", index_label="time")   # hourly, for error analysis
     print(f"\nsaved in {OUT_DIR}")
 
 

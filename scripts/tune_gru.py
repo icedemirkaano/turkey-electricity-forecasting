@@ -79,17 +79,16 @@ def objective(data: FoldData):
     return run
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--trials", type=int, default=25)
-    args = parser.parse_args()
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
-    pd.set_option("display.width", 200)
-    table = pd.read_parquet(PROCESSED_DIR / "ptf_hourly.parquet")
-    flags = table[["is_price_floor", "is_price_cap"]]
-    data = FoldData(table)
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+def best_from_saved_trials() -> dict:
+    """Best completed trial in gru_trials.csv (used when the search was stopped before n_trials)."""
+    trials = pd.read_csv(OUT_DIR / "gru_trials.csv")
+    row = trials[trials["state"] == "COMPLETE"].sort_values("value").iloc[0]
+    print(f"best of {len(trials)} saved trials: trial {int(row['number']) + 1}, MAE {row['value']:.3f}")
+    best = {k.removeprefix("params_"): row[k] for k in trials.columns if k.startswith("params_")}
+    return {k: int(v) if k in ("seq_hours", "units", "layers", "batch_size") else float(v) for k, v in best.items()}
 
+
+def search(data: FoldData, n_trials: int) -> dict:
     start = time.time()
 
     def progress(study, trial):
@@ -100,8 +99,24 @@ def main():
 
     study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=42),
                                 pruner=optuna.pruners.MedianPruner(n_startup_trials=8, n_warmup_steps=1))
-    study.optimize(objective(data), n_trials=args.trials, callbacks=[progress])
-    best = study.best_params
+    study.optimize(objective(data), n_trials=n_trials, callbacks=[progress])
+    return study.best_params
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--trials", type=int, default=25)
+    parser.add_argument("--from-trials", action="store_true",
+                        help="skip the search, take the best trial from gru_trials.csv")
+    args = parser.parse_args()
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    pd.set_option("display.width", 200)
+    table = pd.read_parquet(PROCESSED_DIR / "ptf_hourly.parquet")
+    flags = table[["is_price_floor", "is_price_cap"]]
+    data = FoldData(table)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    best = best_from_saved_trials() if args.from_trials else search(data, args.trials)
     print("best:", best)
     (OUT_DIR / "gru_best_params.json").write_text(json.dumps(best, indent=2))
 

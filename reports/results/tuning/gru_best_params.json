@@ -1,8 +1,8 @@
 {
-  "seq_hours": 72,
-  "units": 64,
-  "layers": 1,
-  "dropout": 0.11649165607921677,
-  "learning_rate": 0.0008012737503998541,
-  "batch_size": 64
+  "batch_size": 16,
+  "dropout": 0.3340663469143968,
+  "layers": 2,
+  "learning_rate": 0.0002337559231035,
+  "seq_hours": 168,
+  "units": 64
 }

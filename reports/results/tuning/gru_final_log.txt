@@ -1,0 +1,18 @@
+best of 15 saved trials: trial 15, MAE 8.472
+best: {'batch_size': 16, 'dropout': 0.3340663469143968, 'layers': 2, 'learning_rate': 0.0002337559231035, 'seq_hours': 168, 'units': 64}
+
+=== mean over folds and seeds
+                         mae   rmse  mae_floor_hours  mae_cap_hours
+model                                                              
+gru                    10.47  13.96            15.23           7.29
+gru (residual)          8.92  12.94             7.61           3.50
+gru (residual, tuned)   8.61  12.70             7.52           2.88
+
+=== MAE per fold (mean over seeds)
+fold                   2025Q1  2025Q2  2025Q3  2025Q4
+model                                                
+gru                      8.63   16.90    8.87    7.48
+gru (residual)           7.88   13.34    7.11    7.35
+gru (residual, tuned)    7.54   12.76    6.87    7.28
+
+saved in /home/kaanu/code/bitirme/turkey-electricity-forecasting/reports/results/tuning

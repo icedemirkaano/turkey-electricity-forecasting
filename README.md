@@ -110,6 +110,45 @@ Under weekly retraining, April and May were only marginally better than the base
 
 **Practical conclusion:** the model is the same in all three rows; only the update frequency changes. A price model like this must be retrained at least weekly. A single training run is not enough when the market changes.
 
+### Post-hoc experiment: classical time series models and GRU tuning
+
+> ⚠️ Also added **after** the test result was known, to compare more of the methods covered in the bootcamp. The model choice above is unchanged. Every variant that was tried is reported here.
+
+Classical models forecast the price series from its own past. SARIMAX and Prophet also use the next-day net load forecast. All of them forecast D+1 from data known on day D, like the models above:
+
+- **Holt-Winters** (exponential smoothing, additive daily or weekly season). Parameters are estimated at each training. Each day the forecast is updated with the latest prices.
+- **SARIMAX** with a daily (24-hour) season. Estimated on the last 8 weeks before the forecast period, because memory grows with the length of the series. Each day its state is updated with the latest prices.
+- **Prophet** (daily and weekly season, Turkish holidays). Refitted every day, because it has no cheap way to add new data.
+
+Validation (mean MAE over the four 2025 quarters):
+
+| Model | MAE |
+|---|---|
+| SARIMAX (1,0,1)(1,0,1,24) | 9.12 |
+| SARIMAX (1,0,1)(0,1,1,24) | 9.60 |
+| Prophet, with yearly season | 10.00 |
+| Same hour yesterday (baseline) | 10.14 |
+| Prophet | 10.30 |
+| Holt-Winters, daily season | 12.74 |
+| Holt-Winters, weekly season | 14.47 |
+| *Tuned XGBoost, for comparison* | *6.88* |
+
+On the test period, the best variant of each family was scored under the two protocols above:
+
+| Forecast | Trained once | Retrained every week |
+|---|---|---|
+| XGBoost | 18.57 | **9.64** |
+| SARIMAX (1,0,1)(1,0,1,24) | 15.08 | 10.80 |
+| Prophet, with yearly season | 13.48 (refitted daily) | – |
+| Holt-Winters, daily season | 16.04 | 16.03 |
+| Same hour yesterday | 12.22 | 12.22 |
+
+- **The ranking is the same as in validation:** XGBoost, then SARIMAX, then the baseline.
+- **Trained once,** every classical model was better than the frozen XGBoost, because each one updates its forecast with the latest prices every day. None of them beat the baseline.
+- **Retrained weekly,** SARIMAX was 12% better than the baseline. It beat weekly XGBoost in February and August.
+
+**GRU tuning (Optuna).** The rule was set before the search: if the tuned GRU reached a mean validation MAE below 7.5, it would be added to the test table. The search covered history length (3, 7 or 14 days), layers, units, dropout, learning rate and batch size. It was planned for 25 trials and stopped after 15, because the best result had stopped improving and trials took up to an hour. The best settings, trained with three random seeds, reached **8.61** (untuned: 8.92). That is above the threshold, so the GRU was not scored on the test period.
+
 ### Limitations
 
 - The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
@@ -152,6 +191,9 @@ python -m scripts.train_final_xgboost          # final model on 2024-2025 -> mod
 python -m scripts.evaluate_test                # the one-time test score
 python -m scripts.posthoc_retrain --every week # post-hoc retraining experiment (also: --every month)
 python -m scripts.analyse_errors               # error analysis figures
+python -m scripts.evaluate_timeseries          # classical time series models, validation
+python -m scripts.evaluate_timeseries_test     # classical time series models, test (post-hoc)
+python -m scripts.tune_gru                     # Optuna search for the GRU (several hours)
 ```
 
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
@@ -161,10 +203,10 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Data inventory and download pipeline
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
 - [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
-- [x] Price forecasting models (classical ML and deep learning), test and error analysis
+- [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis
 - [ ] Business layer: buying cost and imbalance cost
 - [ ] Demo application
-- [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; hydro reservoir inputs
+- [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; combining XGBoost and SARIMAX; hydro reservoir inputs
 - [ ] _Future work:_ consumption forecasting (national hourly demand)
 
 ## Data source

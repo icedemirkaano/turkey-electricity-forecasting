@@ -5,3 +5,16 @@ WARNING:tensorflow:5 out of the last 7 calls to <function TensorFlowTrainer.make
 WARNING:tensorflow:6 out of the last 9 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x72179629d120> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
   trial 1: MAE 9.441 | best 9.441 | 115s
   trial 2: MAE 8.745 | best 8.745 | 188s
+  trial 3: MAE 9.111 | best 8.745 | 1048s
+  trial 4: MAE 8.629 | best 8.629 | 2786s
+  trial 5: MAE 8.853 | best 8.629 | 6540s
+  trial 6: MAE 8.618 | best 8.618 | 10536s
+  trial 7: MAE 8.988 | best 8.618 | 10721s
+  trial 8: MAE 8.981 | best 8.618 | 10948s
+  trial 9: MAE 8.851 | best 8.618 | 11014s
+  trial 10: MAE 8.703 | best 8.618 | 11528s
+  trial 11: MAE 9.062 | best 8.618 | 14748s
+  trial 12: MAE 8.593 | best 8.593 | 15741s
+  trial 13: MAE 8.616 | best 8.593 | 17605s
+  trial 14: MAE 8.742 | best 8.593 | 18596s
+  trial 15: MAE 8.472 | best 8.472 | 19679s

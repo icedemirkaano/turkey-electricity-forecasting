@@ -171,6 +171,17 @@ With 8 flexible hours the picture is the same (XGBoost trained once 85%, retrain
 
 **The model that failed on MAE was the best at this decision.** For choosing hours only the order of the prices within a day matters, not their level. The frozen model forecast too high in spring, but it still ranked the hours well. It captured more of the possible saving than the baseline in every month except June (92.5% vs 94.3%). The gap was largest in January–March (23–28 percentage points). In April–May every forecast captured 88–97%, because with many hours at the price floor (95 and 214 hours) the cheap hours were easy to find.
 
+### Demo period (October 2026)
+
+The demo uses days that no training run or model choice had seen. Following the retraining result, the tuned XGBoost is retrained every Monday on all data up to the day before:
+
+| Forecast, 1–29 October 2026 | MAE | Days better than the baseline |
+|---|---|---|
+| XGBoost, retrained weekly | 7.84 | 19 of 29 |
+| Same hour yesterday | 11.56 | – |
+
+The demo app shows, for any day: the 24 forecast and actual prices, the cheapest and most expensive hours, and what a purchase or a flexible job would cost.
+
 ### Limitations
 
 - The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
@@ -187,7 +198,7 @@ notebooks/        analysis notebooks, one per phase
 tests/            unit tests for src/
 reports/figures/  charts used in this README
 reports/results/  scores and predictions (CSV)
-app/              demo application (planned)
+app/              demo application (Streamlit)
 data/             raw / interim / processed data (not committed)
 models/           trained models (not committed)
 ```
@@ -219,6 +230,13 @@ python -m scripts.tune_gru                     # Optuna search for the GRU (seve
 python -m scripts.evaluate_load_shifting       # business layer: load shifting with the test forecasts
 ```
 
+Demo (October 2026 onwards):
+
+```bash
+python -m scripts.make_demo_forecasts          # weekly retrained forecasts -> app/data/demo_forecasts.csv
+streamlit run app/streamlit_app.py             # opens the app at http://localhost:8501
+```
+
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
 
 ## Roadmap
@@ -226,9 +244,10 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Data inventory and download pipeline
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
 - [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
-- [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis
+- [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis — [`notebooks/02_ptf_models.ipynb`](notebooks/02_ptf_models.ipynb)
 - [x] Business layer: load shifting (imbalance cost left out: it depends on quantity forecast errors, and this project forecasts prices only)
-- [ ] Demo application
+- [x] Demo application (local Streamlit app, October 2026)
+- [ ] Publish the demo online
 - [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; combining XGBoost and SARIMAX; hydro reservoir inputs
 - [ ] _Future work:_ consumption forecasting (national hourly demand)
 

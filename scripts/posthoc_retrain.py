@@ -21,7 +21,7 @@ import pandas as pd
 from src.config import PROCESSED_DIR, ROOT
 from src.evaluation import RETRAIN_WINDOW_STARTS, TEST_PERIOD, period, retrain_windows, scores, scores_by_month
 from src.features import MODEL_START, build_features
-from src.models import fit, predict
+from src.retraining import retrained_forecasts
 
 RESULTS = ROOT / "reports" / "results"
 OUT_DIR = RESULTS / "posthoc"
@@ -45,14 +45,9 @@ def main():
     X, y = build_features(table)
     flags = table[["is_price_floor", "is_price_cap"]]
 
-    parts = []
-    for start, end in retrain_windows(*TEST_PERIOD, args.every):
-        first, last = start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
-        train_last = (start - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-        model = fit("xgboost", period(X, MODEL_START, train_last), period(y, MODEL_START, train_last), **params)
-        parts.append(predict(model, period(X, first, last)))
-    retrained = pd.concat(parts).rename(name)
-    print(f"{len(parts)} windows, each trained on {MODEL_START} .. the day before the window")
+    retrained = retrained_forecasts(X, y, *TEST_PERIOD, args.every, **params).rename(name)
+    windows = len(retrain_windows(*TEST_PERIOD, args.every))
+    print(f"{windows} windows, each trained on {MODEL_START} .. the day before the window")
 
     y_test = period(y, *TEST_PERIOD)
     frozen = read_hourly(RESULTS / "test_predictions.csv", y.index.tz)

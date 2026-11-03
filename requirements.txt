@@ -12,3 +12,6 @@ optuna==5.0.0
 tensorflow==2.16.2
 keras==3.11.3
 prophet==1.5.0
+streamlit==1.60.0
+plotly==6.0.0
+protobuf==4.25.6  # tensorflow 2.16 needs <5; newer streamlit versions need >=5.26

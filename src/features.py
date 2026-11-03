@@ -34,13 +34,40 @@ FEATURE_SPEC = [
     ("gen_solar", 48),          # decision A1: realized solar of the latest known full day
     ("gen_solar", 168),
 ]
-DERIVED_KNOWN_AHEAD = {"net_load_forecast"}
+
+# Round 2 (instructor: temperature; error analysis: hydro). The round-1 results above stay as they are.
+FEATURE_SPEC_V2 = FEATURE_SPEC + [
+    ("temperature_forecast", 0),   # mean of five cities, archived forecast (src/weather.py)
+    ("temperature_heating", 0),    # derived: degrees below 18 °C (heating demand), helps linear models
+    ("temperature_cooling", 0),    # derived: degrees above 18 °C (cooling demand)
+    ("hydro_share", 48),           # derived: (dammed + run-of-river hydro) / total generation, latest known day
+    ("hydro_share_7d", 48),        # derived: its mean over the 7 days before that, a slow proxy of reservoir levels
+]
+FEATURE_SETS = {"v1": FEATURE_SPEC, "v2": FEATURE_SPEC_V2}
+
+# Derived columns and the availability label of the columns they are built from
+DERIVED = {"net_load_forecast": "known_ahead", "temperature_heating": "known_ahead",
+           "temperature_cooling": "known_ahead", "hydro_share": "past_only", "hydro_share_7d": "past_only"}
+COMFORT_TEMPERATURE = 18.0
+
+
+def add_derived(source: pd.DataFrame) -> pd.DataFrame:
+    """Derived columns, computed from the same hour (or earlier hours only), before any lag is applied."""
+    out = source.copy()
+    out["net_load_forecast"] = out["load_forecast"] - out["wind_forecast"]
+    if "temperature_forecast" in out:
+        out["temperature_heating"] = (COMFORT_TEMPERATURE - out["temperature_forecast"]).clip(lower=0)
+        out["temperature_cooling"] = (out["temperature_forecast"] - COMFORT_TEMPERATURE).clip(lower=0)
+    if {"gen_dammed_hydro", "gen_river", "gen_total"} <= set(out.columns):
+        out["hydro_share"] = (out["gen_dammed_hydro"] + out["gen_river"]) / out["gen_total"]
+        out["hydro_share_7d"] = out["hydro_share"].rolling(168).mean()   # this hour and the 167 before: no future
+    return out
 
 
 def min_lag(column: str) -> int:
     """Smallest lag (hours) at which `column` is known at forecast time. Raises for columns never allowed."""
-    if column in DERIVED_KNOWN_AHEAD:
-        return 0
+    if column in DERIVED:
+        return MIN_LAG[DERIVED[column]]
     label = COLUMN_AVAILABILITY.get(column)
     if label is None or label == "evaluation_only":
         raise ValueError(f"'{column}' may not be used as a model input (label: {label})")
@@ -64,8 +91,7 @@ def feature_name(column: str, lag: int) -> str:
 def build_features(table: pd.DataFrame, spec=FEATURE_SPEC, start=MODEL_START) -> tuple[pd.DataFrame, pd.Series]:
     """Return (X, y) for hours from `start` on. `table` is the hourly table from src/dataset.py."""
     check_spec(spec)
-    source = table.copy()
-    source["net_load_forecast"] = source["load_forecast"] - source["wind_forecast"]
+    source = add_derived(table)
 
     features = {feature_name(c, lag): source[c].shift(lag) for c, lag in spec}  # hourly index -> shift = hours
 

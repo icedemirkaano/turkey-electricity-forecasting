@@ -1,0 +1,22 @@
+test 2026-10-01 .. 2026-11-01: 768 hours, 5 weekly models
+
+=== ROUND 2 TEST (run once)
+                                 hours    mae   rmse  mae_floor_hours  floor_hours  mae_cap_hours  cap_hours
+hist gradient boosting (chosen)  768.0   7.74  10.58             7.58         18.0           3.70       42.0
+xgboost (context)                768.0   7.62  10.40             8.69         18.0           4.06       42.0
+same hour yesterday              768.0  11.37  17.71            29.45         18.0           3.77       42.0
+same hour last week              768.0  15.02  19.40             1.26         18.0           8.63       42.0
+/home/kaanu/code/bitirme/turkey-electricity-forecasting/scripts/round2_test.py:61: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.
+  weeks = frame.index.to_period("W-SUN").start_time.strftime("%Y-%m-%d")
+
+=== MAE per week (weeks start on Monday)
+            hist gradient boosting (chosen)  xgboost (context)  same hour yesterday  same hour last week
+timestamp                                                                                               
+2026-09-28                             8.55               8.37                10.93                17.20
+2026-10-05                             7.37               7.45                11.08                16.65
+2026-10-12                             8.42               8.17                13.82                15.34
+2026-10-19                             7.26               7.45                10.25                14.71
+2026-10-26                             7.46               6.96                10.57                12.14
+
+days where the chosen model beats 'same hour yesterday': 24 of 32
+saved /home/kaanu/code/bitirme/turkey-electricity-forecasting/reports/results/round2

@@ -1,0 +1,120 @@
+xgboost: 170s
+random forest: 1328s
+hist gradient boosting: 425s
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 5.395e-01, tolerance: 2.687e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.746e-02, tolerance: 4.471e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.133e+00, tolerance: 4.622e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.113e-01, tolerance: 6.410e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 9.046e-02, tolerance: 6.590e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.300e-01, tolerance: 6.669e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.307e-01, tolerance: 6.620e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.809e-01, tolerance: 7.359e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 9.958e-02, tolerance: 7.369e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.018e-01, tolerance: 7.468e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.594e-01, tolerance: 7.184e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.419e-01, tolerance: 7.245e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.094e-01, tolerance: 7.571e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.868e-01, tolerance: 7.647e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.684e-01, tolerance: 7.835e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.310e-01, tolerance: 7.857e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 9.244e-02, tolerance: 9.031e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.424e-01, tolerance: 4.996e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.157e-01, tolerance: 1.030e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.147e-01, tolerance: 1.054e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 5.400e+00, tolerance: 5.093e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.814e-01, tolerance: 7.016e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.922e+00, tolerance: 5.241e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 8.209e-02, tolerance: 7.160e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 8.879e-02, tolerance: 7.221e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.000e-01, tolerance: 5.365e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.537e-01, tolerance: 1.075e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.531e-01, tolerance: 5.224e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.085e-01, tolerance: 1.079e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 9.326e-02, tolerance: 5.332e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.281e-01, tolerance: 1.024e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 9.585e-02, tolerance: 7.934e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.355e-01, tolerance: 5.363e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.550e-01, tolerance: 1.121e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.763e-01, tolerance: 1.029e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.445e-01, tolerance: 1.137e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.466e-01, tolerance: 1.054e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.070e+00, tolerance: 1.075e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 8.983e-02, tolerance: 6.901e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.647e-01, tolerance: 1.128e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.742e-01, tolerance: 1.135e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.688e-01, tolerance: 1.144e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.046e-01, tolerance: 1.118e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 8.932e-02, tolerance: 6.756e-02
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.126e-01, tolerance: 1.119e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 3.255e-01, tolerance: 1.110e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 2.913e-01, tolerance: 1.101e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 6.138e-01, tolerance: 1.071e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 4.483e-01, tolerance: 1.077e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.785e-01, tolerance: 1.076e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.613e-01, tolerance: 1.026e-01
+  model = cd_fast.enet_coordinate_descent(
+/home/kaanu/.pyenv/versions/workintech/lib/python3.12/site-packages/sklearn/linear_model/_coordinate_descent.py:695: ConvergenceWarning: Objective did not converge. You might want to increase the number of iterations, check the scale of the features or consider increasing regularisation. Duality gap: 1.298e-01, tolerance: 1.029e-01
+  model = cd_fast.enet_coordinate_descent(
+lear: 415s
+
+=== ROUND 2: weekly retraining, MAE on the 7 validation quarters
+fold                                2025Q1  2025Q2  2025Q3  2025Q4  2026Q1  2026Q2  2026Q3   mean  mean 2025  mean 2026
+model                                                                                                                  
+hist gradient boosting (tuned, v2)    6.47    8.83    4.92    5.92   10.52    9.07    8.38   7.73       6.53       9.32
+xgboost (tuned, v2)                   6.28    8.85    4.97    5.97   11.12    9.31    8.39   7.84       6.52       9.61
+random forest (tuned, v2)             6.46    9.41    5.64    6.12   11.18    9.78    8.56   8.16       6.91       9.84
+lear (v1)                             5.86    9.67    5.48    6.09   11.30   19.96    7.97   9.47       6.77      13.08
+same hour yesterday                   8.66   14.20    9.12    8.58   13.80   10.40   12.49  11.03      10.14      12.23
+
+chosen by the pre-set rule (lowest mean of the 7 quarters): hist gradient boosting (tuned, v2)
+saved /home/kaanu/code/bitirme/turkey-electricity-forecasting/reports/results/round2

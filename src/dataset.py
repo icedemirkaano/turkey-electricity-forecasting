@@ -17,6 +17,7 @@ from src.clean import (LOAD_PLAN_FILL_LAGS_DAYS, WIND_FILL_LAGS_DAYS, clip_negat
                        fill_from_past_same_hour, to_hourly_wind)
 from src.config import PRICE_CAPS, PRICE_FLOOR, PROCESSED_DIR, TIMEZONE
 from src.load import load_raw
+from src.weather import load_weather, national_temperature
 
 OUTPUT_PATH = PROCESSED_DIR / "ptf_hourly.parquet"
 
@@ -41,6 +42,7 @@ COLUMN_AVAILABILITY = {
     "wind_forecast": "known_ahead", "wind_forecast_is_filled": "known_ahead", "wind_n_obs": "known_ahead",
     "wind_generation_monitored": "evaluation_only",
     **{name: "past_only" for name in GEN_RENAME.values()},
+    "temperature_forecast": "known_ahead",   # archived weather forecast (src/weather.py), round 2
 }
 
 
@@ -91,10 +93,13 @@ def build_ptf_hourly() -> tuple[pd.DataFrame, dict]:
     wind["wind_n_obs"] = wind["wind_n_obs"].fillna(0).astype(int)
     report["wind_forecast_filled_hours"] = int(wind_filled.sum())
 
+    # Temperature forecast: mean of five cities (scripts/fetch_weather.py); the archive ends a few days before today
+    temperature = national_temperature(load_weather()).reindex(index)
+
     table = pd.concat([
         prices, other_prices, matched, consumption.rename("consumption"),
         load_forecast.rename("load_forecast"), load_filled.rename("load_forecast_is_filled"),
-        gen, wind, wind_filled.rename("wind_forecast_is_filled"),
+        gen, wind, wind_filled.rename("wind_forecast_is_filled"), temperature,
     ], axis=1).reindex(index)
     table.index.name = "timestamp"
 

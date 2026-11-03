@@ -37,7 +37,12 @@ def test_one_row_per_hour_without_gaps(table):
 
 def test_model_inputs_have_no_missing_values_and_rules_hold(table):
     inputs = [c for c, a in COLUMN_AVAILABILITY.items() if a in ("target", "known_ahead")]
-    assert table[inputs].notna().all().all()
+    epias = [c for c in inputs if c != "temperature_forecast"]
+    assert table[epias].notna().all().all()
+    # The weather archive ends about 2 days before today, so only the newest hours may lack temperature
+    known = table["temperature_forecast"].notna()
+    assert known.loc[:known[known].index.max()].all()
+    assert (~known).sum() <= 72
     gen_cols = [c for c in table.columns if c.startswith("gen_")]
     assert (table[gen_cols] >= 0).all().all()
     assert (table["ptf_try"] <= table["price_cap_try"]).all()

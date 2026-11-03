@@ -1,0 +1,163 @@
+
+=== xgboost
+  trial 1: MAE 10.715 | best 10.715 | 9s
+  trial 2: MAE 9.695 | best 9.695 | 37s
+  trial 3: MAE 10.120 | best 9.695 | 47s
+  trial 4: MAE 9.823 | best 9.695 | 50s
+  trial 5: MAE 9.802 | best 9.695 | 59s
+  trial 6: MAE 10.181 | best 9.695 | 72s
+  trial 7: MAE 10.218 | best 9.695 | 82s
+  trial 8: MAE 10.406 | best 9.695 | 89s
+  trial 9: MAE 10.021 | best 9.695 | 92s
+  trial 10: MAE 9.755 | best 9.695 | 95s
+  trial 11: MAE 9.509 | best 9.509 | 107s
+  trial 12: MAE 9.402 | best 9.402 | 125s
+  trial 13: MAE 9.521 | best 9.402 | 134s
+  trial 14: MAE 9.474 | best 9.402 | 161s
+  trial 15: MAE 9.456 | best 9.402 | 193s
+  trial 16: MAE 9.736 | best 9.402 | 214s
+  trial 17: MAE 9.621 | best 9.402 | 230s
+  trial 18: pruned | best 9.402 | 240s
+  trial 19: pruned | best 9.402 | 249s
+  trial 20: MAE 9.519 | best 9.402 | 272s
+  trial 21: MAE 9.554 | best 9.402 | 297s
+  trial 22: MAE 9.488 | best 9.402 | 330s
+  trial 23: MAE 9.478 | best 9.402 | 349s
+  trial 24: MAE 9.499 | best 9.402 | 363s
+  trial 25: pruned | best 9.402 | 371s
+  trial 26: MAE 9.441 | best 9.402 | 393s
+  trial 27: pruned | best 9.402 | 403s
+  trial 28: pruned | best 9.402 | 413s
+  trial 29: pruned | best 9.402 | 422s
+  trial 30: pruned | best 9.402 | 434s
+  trial 31: pruned | best 9.402 | 439s
+  trial 32: pruned | best 9.402 | 446s
+  trial 33: pruned | best 9.402 | 464s
+  trial 34: pruned | best 9.402 | 476s
+  trial 35: pruned | best 9.402 | 486s
+  trial 36: pruned | best 9.402 | 499s
+  trial 37: MAE 9.451 | best 9.402 | 514s
+  trial 38: MAE 9.777 | best 9.402 | 520s
+  trial 39: pruned | best 9.402 | 527s
+  trial 40: pruned | best 9.402 | 539s
+  trial 41: MAE 9.420 | best 9.402 | 553s
+  trial 42: MAE 9.450 | best 9.402 | 572s
+  trial 43: MAE 9.451 | best 9.402 | 585s
+  trial 44: MAE 9.499 | best 9.402 | 603s
+  trial 45: MAE 9.379 | best 9.379 | 615s
+  trial 46: MAE 9.527 | best 9.379 | 632s
+  trial 47: pruned | best 9.379 | 641s
+  trial 48: pruned | best 9.379 | 653s
+  trial 49: MAE 9.368 | best 9.368 | 665s
+  trial 50: MAE 9.373 | best 9.368 | 674s
+best: {'n_estimators': 490, 'learning_rate': 0.012707771445020449, 'max_depth': 8, 'min_child_weight': 15, 'subsample': 0.6724217225819455, 'colsample_bytree': 0.8972779695577086, 'reg_lambda': 0.002586789366586492, 'objective': 'reg:absoluteerror'}
+
+=== hist gradient boosting
+  trial 1: MAE 10.427 | best 10.427 | 27s
+  trial 2: MAE 10.227 | best 10.227 | 77s
+  trial 3: MAE 9.294 | best 9.294 | 91s
+  trial 4: MAE 9.301 | best 9.294 | 107s
+  trial 5: MAE 9.218 | best 9.218 | 158s
+  trial 6: MAE 9.458 | best 9.218 | 182s
+  trial 7: MAE 9.617 | best 9.218 | 189s
+  trial 8: MAE 9.860 | best 9.218 | 209s
+  trial 9: MAE 9.397 | best 9.218 | 215s
+  trial 10: MAE 9.289 | best 9.218 | 252s
+  trial 11: MAE 9.347 | best 9.218 | 320s
+  trial 12: pruned | best 9.218 | 339s
+  trial 13: pruned | best 9.218 | 372s
+  trial 14: pruned | best 9.218 | 408s
+  trial 15: MAE 9.412 | best 9.218 | 458s
+  trial 16: MAE 9.237 | best 9.218 | 495s
+  trial 17: pruned | best 9.218 | 511s
+  trial 18: pruned | best 9.218 | 522s
+  trial 19: pruned | best 9.218 | 546s
+  trial 20: MAE 9.280 | best 9.218 | 575s
+  trial 21: pruned | best 9.218 | 585s
+  trial 22: MAE 9.363 | best 9.218 | 619s
+  trial 23: pruned | best 9.218 | 633s
+  trial 24: MAE 9.213 | best 9.213 | 659s
+  trial 25: MAE 9.207 | best 9.207 | 680s
+  trial 26: MAE 9.310 | best 9.207 | 714s
+  trial 27: pruned | best 9.207 | 725s
+  trial 28: MAE 9.349 | best 9.207 | 742s
+  trial 29: MAE 9.331 | best 9.207 | 765s
+  trial 30: pruned | best 9.207 | 775s
+  trial 31: pruned | best 9.207 | 799s
+  trial 32: MAE 9.268 | best 9.207 | 815s
+  trial 33: pruned | best 9.207 | 835s
+  trial 34: pruned | best 9.207 | 844s
+  trial 35: MAE 9.324 | best 9.207 | 864s
+  trial 36: MAE 9.169 | best 9.169 | 898s
+  trial 37: pruned | best 9.169 | 912s
+  trial 38: MAE 9.264 | best 9.169 | 957s
+  trial 39: MAE 9.297 | best 9.169 | 992s
+  trial 40: MAE 9.296 | best 9.169 | 1018s
+  trial 41: MAE 9.188 | best 9.169 | 1069s
+  trial 42: MAE 9.199 | best 9.169 | 1127s
+  trial 43: MAE 9.287 | best 9.169 | 1186s
+  trial 44: MAE 9.235 | best 9.169 | 1256s
+  trial 45: MAE 9.260 | best 9.169 | 1311s
+  trial 46: MAE 9.277 | best 9.169 | 1364s
+  trial 47: pruned | best 9.169 | 1379s
+  trial 48: pruned | best 9.169 | 1391s
+  trial 49: MAE 9.267 | best 9.169 | 1454s
+  trial 50: pruned | best 9.169 | 1477s
+best: {'max_iter': 1096, 'learning_rate': 0.015247801095248176, 'max_leaf_nodes': 40, 'min_samples_leaf': 13, 'l2_regularization': 0.008855549354651396, 'loss': 'absolute_error'}
+
+=== random forest
+  trial 1: MAE 9.983 | best 9.983 | 50s
+  trial 2: MAE 9.856 | best 9.856 | 111s
+  trial 3: MAE 9.848 | best 9.848 | 134s
+  trial 4: MAE 9.790 | best 9.790 | 309s
+  trial 5: MAE 9.862 | best 9.790 | 392s
+  trial 6: MAE 9.795 | best 9.790 | 438s
+  trial 7: MAE 9.756 | best 9.756 | 518s
+  trial 8: MAE 9.791 | best 9.756 | 554s
+  trial 9: MAE 9.800 | best 9.756 | 585s
+  trial 10: MAE 9.847 | best 9.756 | 614s
+  trial 11: MAE 9.662 | best 9.662 | 676s
+  trial 12: MAE 9.605 | best 9.605 | 758s
+  trial 13: MAE 9.604 | best 9.604 | 845s
+  trial 14: MAE 9.671 | best 9.604 | 941s
+  trial 15: MAE 9.679 | best 9.604 | 1081s
+  trial 16: MAE 9.670 | best 9.604 | 1188s
+  trial 17: MAE 9.645 | best 9.604 | 1282s
+  trial 18: MAE 9.635 | best 9.604 | 1416s
+  trial 19: MAE 9.908 | best 9.604 | 1468s
+  trial 20: MAE 9.708 | best 9.604 | 1521s
+  trial 21: MAE 9.899 | best 9.604 | 1563s
+  trial 22: MAE 9.587 | best 9.587 | 1657s
+  trial 23: MAE 9.634 | best 9.587 | 1756s
+  trial 24: MAE 9.719 | best 9.587 | 1835s
+  trial 25: MAE 9.675 | best 9.587 | 1931s
+  trial 26: MAE 9.633 | best 9.587 | 1997s
+  trial 27: MAE 9.635 | best 9.587 | 2076s
+  trial 28: MAE 9.707 | best 9.587 | 2187s
+  trial 29: MAE 9.683 | best 9.587 | 2246s
+  trial 30: MAE 9.698 | best 9.587 | 2347s
+best: {'n_estimators': 408, 'min_samples_leaf': 9, 'max_features': 0.728850357947031}
+
+=== mean over the 7 folds: untuned vs tuned
+                                  mae   rmse  mae_floor_hours  mae_cap_hours
+model                                                                       
+hist gradient boosting (tuned)   9.17  12.79             9.40           5.27
+xgboost (tuned)                  9.37  12.96            10.90           5.64
+random forest (tuned)            9.59  12.96            13.38           6.87
+random forest                    9.61  13.02            13.07           6.87
+hist gradient boosting           9.79  13.08             7.78           6.14
+xgboost                         10.11  13.36             9.61           5.87
+same hour yesterday             11.03  17.45            15.90           7.61
+
+=== MAE per fold
+fold                            2025Q1  2025Q2  2025Q3  2025Q4  2026Q1  2026Q2  2026Q3
+model                                                                                 
+hist gradient boosting            7.57    9.20    5.52    6.37   14.40   17.01    8.49
+hist gradient boosting (tuned)    7.23    8.95    5.17    6.51   14.79   12.88    8.66
+random forest                     6.76    9.71    6.24    6.36   13.72   15.23    9.27
+random forest (tuned)             6.63    9.68    6.10    6.33   13.66   15.67    9.06
+same hour yesterday               8.66   14.20    9.12    8.58   13.80   10.40   12.49
+xgboost                           7.71    9.14    5.70    6.86   15.66   17.15    8.54
+xgboost (tuned)                   6.97    9.19    5.25    6.47   15.22   13.92    8.56
+
+saved /home/kaanu/code/bitirme/turkey-electricity-forecasting/reports/results/round2/tuning

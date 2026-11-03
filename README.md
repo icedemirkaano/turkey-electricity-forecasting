@@ -25,6 +25,8 @@ Hourly data from January 2023 onwards, downloaded with the EPİAŞ web service (
 | `rt-gen` | Real-time generation by source |
 | `wind-forecast` | Wind generation forecast with quantile bands |
 
+Round 2 adds hourly temperature forecasts for five cities from the [Open-Meteo](https://open-meteo.com) Historical Forecast API (no account needed).
+
 ## Forecasting setup
 
 **Target.** The 24 hourly prices of day D+1 in USD/MWh, forecast on day D before the 12:30 offer deadline.
@@ -156,7 +158,7 @@ On the test period, the best variant of each family was scored under the two pro
 
 - **With the same information, XGBoost is still clearly better:** given only past prices and the hour, it reaches 8.34, better than every time series model, and better than ridge with all inputs (8.97).
 - **The extra inputs did not help the time series model.** SARIMAX with all inputs (load and wind forecasts, price cap, past solar, holidays, day of week) reached 10.00, worse than with the net load forecast alone (9.12). With the default 50 iterations its estimation did not converge (9.62); with 200 iterations it converged and the result got worse, so the problem is not the estimation. A linear model with a fixed pattern cannot use these inputs the way the price reacts to them (thresholds, the floor and the cap, a different effect of net load at noon and in the evening).
-- Thresholds set before the run: time series counted as competitive below 7.38, and "the gap is mostly information" if XGBoost with past prices only were above 8.6. Neither was reached. XGBoost kept its tuned settings with fewer inputs, which slightly favours the full model. Lasso-type autoregressive models from the price forecasting literature were not tried.
+- Thresholds set before the run: time series counted as competitive below 7.38, and "the gap is mostly information" if XGBoost with past prices only were above 8.6. Neither was reached. XGBoost kept its tuned settings with fewer inputs, which slightly favours the full model. The lasso-type autoregressive model of the price forecasting literature (LEAR) was tried in round 2 (below).
 
 **GRU tuning (Optuna).** The rule was set before the search: if the tuned GRU reached a mean validation MAE below 7.5, it would be added to the test table. The search covered history length (3, 7 or 14 days), layers, units, dropout, learning rate and batch size. It was planned for 25 trials and stopped after 15, because the best result had stopped improving and trials took up to an hour. The best settings, trained with three random seeds, reached **8.61** (untuned: 8.92). That is above the threshold, so the GRU was not scored on the test period.
 
@@ -198,10 +200,103 @@ The demo app is built for one user and one decision: a business with a flexible 
 - **Tomorrow's plan:** the forecast as it looked on the day before, with the hours to run the job (green) and to avoid (red) and the expected saving. What actually happened is revealed only on request.
 - **Can I trust it?:** the same forecasts checked against the actual prices over all demo days, against the same-hour-yesterday baseline.
 
+### Round 2: temperature, hydro and a new split
+
+> ⚠️ Started **after** the round-1 test and the instructor's review (questions: why no temperature, why not beat the dummy, shouldn't time series models do better). The round-1 results above stay as they were reported. Round 2 has its own split and its own one-time test; every variant that was tried is reported.
+
+**What changed**
+
+- **New inputs (21 instead of 16):**
+  - temperature forecast for the target hour, plus degrees below and above 18 °C (heating and cooling demand);
+  - hydro share of generation (dammed + run-of-river) of the latest known day and its 7-day mean. The error analysis pointed at hydro: its 7-day share was 0.47–0.49 in spring 2026, at most 0.36 before.
+- **Temperature source:** the equal-weight mean of five cities (İstanbul, Ankara, İzmir, Bursa, Antalya) from the [Open-Meteo Historical Forecast API](https://open-meteo.com/en/docs/historical-forecast-api), so the input is a forecast, as it would be on the day, not the measured temperature (`src/weather.py`).
+- **New split:** the round-1 test period becomes validation, so model choice also sees the low-price regime of 2026.
+  - Validation: 7 quarters, 2025Q1–2026Q3.
+  - Test: 1 October – 1 November 2026, the last day with every input available, scored once.
+- **New model, LEAR:** the lasso-estimated autoregressive model of the price forecasting literature (Lago et al., 2021), as implemented in `epftoolbox` (`src/lear.py`).
+  - One lasso model per delivery hour, 247 inputs: prices of the previous 1, 2, 3 and 7 days, load and wind forecasts of the target day, the day before and a week before, and the day of week.
+  - The penalty is chosen with an information criterion (AIC).
+
+**Step 1: all models, round-1 inputs (v1) vs new inputs (v2).** Each quarter is forecast by a model trained once before it. Mean MAE (USD/MWh):
+
+| Model | Inputs | 7 quarters | 2025 | 2026 Q1–Q3 |
+|---|---|---|---|---|
+| XGBoost, round-1 tuned settings | v2 | **9.46** | 6.98 | 12.77 |
+| XGBoost, round-1 tuned settings | v1 | 9.72 | 6.88 | 13.50 |
+| Random forest | v2 | 9.61 | 7.27 | 12.74 |
+| HistGradientBoosting | v2 | 9.79 | 7.17 | 13.30 |
+| LEAR | v1 | 10.48 | 7.16 | 14.91 |
+| LEAR, + temperature forecast | v2 | 10.60 | 7.21 | 15.12 |
+| Same hour yesterday | – | 11.03 | 10.14 | **12.23** |
+| SARIMAX (1,0,1)(1,0,1,24) | v1 | 11.29 | 9.12 | 14.18 |
+| Dummy (training median) | – | 21.91 | 13.98 | 32.48 |
+
+- In 2025 LEAR (7.16) was close to the tree models, and well ahead of SARIMAX (9.12).
+- **Trained once per quarter, no model beat the baseline on its 2026 mean, and none came close in 2026Q2.** That is the spring with high hydro: the baseline scored 10.40, the best model 13.54 and LEAR 24.07. In 2026Q1 LEAR (12.44) and SARIMAX (12.05) were better than the baseline (13.80).
+
+**Step 2: tuning (Optuna)** of the three tree models on the 7 quarters with v2 inputs (50, 50 and 30 trials):
+
+| Model | Untuned | Tuned |
+|---|---|---|
+| HistGradientBoosting | 9.79 | **9.17** |
+| XGBoost | 10.11 | 9.37 |
+| Random forest | 9.61 | 9.59 |
+
+Tuning helped mainly in 2026Q2 (HistGradientBoosting 17.01 → 12.88). Still trained once per quarter, all three stayed behind the baseline in 2026Q2 (10.40). Only random forest was ahead in 2026Q1, by 0.14.
+
+**Step 3: final choice, retrained every Monday** (as the model is used, following the round-1 retraining result). The rule was set before the run: the lowest mean over the 7 quarters wins.
+
+| Model, retrained weekly | 7 quarters | 2025 | 2026 Q1–Q3 | Quarters better than the baseline |
+|---|---|---|---|---|
+| **HistGradientBoosting, tuned, v2 (chosen)** | **7.73** | 6.53 | **9.32** | 7 of 7 |
+| XGBoost, tuned, v2 | 7.84 | 6.52 | 9.61 | 7 of 7 |
+| Random forest, tuned, v2 | 8.16 | 6.91 | 9.84 | 7 of 7 |
+| LEAR, v1 | 9.47 | 6.77 | 13.08 | 6 of 7 |
+| Same hour yesterday | 11.03 | 10.14 | 12.23 | – |
+
+HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set rule decided. LEAR failed again in 2026Q2 (19.96).
+
+**Step 4: which inputs matter** (chosen model, validation). Two checks:
+
+- **Ablation:** drop a group, retrain weekly. Answers "would we miss these inputs?".
+- **Permutation:** shuffle an input in a quarter it was not trained on. Answers "how much does the model rely on it?".
+
+| Inputs, retrained weekly | 7 quarters | 2026 Q1–Q3 |
+|---|---|---|
+| All v2 inputs | **7.73** | **9.32** |
+| Without temperature | 7.87 | 9.55 |
+| Without hydro | 7.76 | 9.48 |
+| Without both (= v1) | 7.81 | 9.49 |
+
+- The model relies most on the same hour yesterday (MAE rises by 2.55 when it is shuffled) and the net load forecast (2.33). The temperature group adds 0.13, the hydro group 0.01.
+- **The expectation written before the run was wrong.** It said hydro would matter more than temperature. Temperature helped a little in 6 of 7 quarters. Hydro helped only in 2026Q2 (9.62 → 9.07) and slightly hurt in 2026Q1.
+- A likely reason that temperature adds so little: EPİAŞ's load forecast already depends on the weather. This was not tested directly.
+- Differences of about 0.1 are close to noise. Dropping both groups (7.81) scored better than dropping temperature alone (7.87). The settings were also tuned with all v2 inputs, which slightly favours them.
+
+**Step 5: test, 1 October – 1 November 2026, scored once**
+
+| Forecast, retrained every Monday | MAE | RMSE | MAE at price-floor hours (18) | vs. baseline |
+|---|---|---|---|---|
+| **HistGradientBoosting, tuned, v2 (chosen)** | **7.74** | 10.58 | 7.58 | **32% better** |
+| *XGBoost, tuned, v2 (context only)* | *7.62* | *10.40* | *8.69* | *33% better* |
+| Same hour yesterday | 11.37 | 17.71 | 29.45 | – |
+| Same hour last week | 15.02 | 19.40 | 1.26 | 32% worse |
+
+- The chosen model beat the baseline in all 5 weeks and on 24 of 32 days.
+- The test error matches validation: 7.74 on the test vs 7.73 on validation, so tuning and model choice were not overly optimistic.
+- October 2026 had already been shown in the round-1 demo, with a different model. No round-2 choice used it.
+
+**Answers to the review questions**
+
+- **Temperature:** added and measured. It brings a small but consistent gain (7.87 → 7.73 on validation).
+- **Beating the dummy and the baseline:** what mattered was how often the model is retrained, not the inputs. Trained once per quarter, no model beat the baseline in 2026Q2. Retrained weekly, the chosen model beat it in every validation quarter and in the test.
+- **Time series models:** SARIMAX, Prophet, Holt-Winters and LEAR were all tried. LEAR, the strongest, is competitive in stable periods (2025: 7.16, vs 7.15–7.27 for the untuned tree models and 6.88 for tuned XGBoost). It breaks when the market regime changes (2026Q2). Tree models handle the thresholds in the price (floor, cap, low-price periods) better.
+
 ### Limitations
 
 - The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
-- No weather or hydro reservoir data is used. Hydro had an unusually large share of generation in spring 2026.
+- Round 1 used no weather or hydro data; round 2 added both (above). The temperature input has two simplifications. First, it is an archive stitched from the first hours of each forecast run, so it is somewhat more accurate than a forecast made the day before would have been. Second, the five cities have equal weight, not weights by consumption. Hydro enters only as its share of past generation, not as reservoir levels or inflows.
+- Round 2's test covers only one month (32 days).
 - Prices are modelled in USD using EPİAŞ's own USD price column; the exchange rate source behind it is not documented here.
 - Solar generation in the real-time generation table is a small share of the total (about 1–4%). Whether it covers all unlicensed solar plants has not been verified.
 
@@ -247,6 +342,16 @@ python -m scripts.tune_gru                     # Optuna search for the GRU (seve
 python -m scripts.evaluate_load_shifting       # business layer: load shifting with the test forecasts
 ```
 
+Round 2 (needs `python -m scripts.fetch_weather` before `build_dataset`; results in `reports/results/round2/`):
+
+```bash
+python -m scripts.round2_compare               # all models, v1 vs v2 inputs, 7 validation quarters
+python -m scripts.tune_models --round 2        # Optuna search on the 7 quarters (about 1.5 hours)
+python -m scripts.round2_weekly                # final choice with weekly retraining
+python -m scripts.round2_importance            # ablation and permutation importance
+python -m scripts.round2_test                  # the one-time round-2 test
+```
+
 Demo (October 2026 onwards):
 
 ```bash
@@ -264,10 +369,14 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis — [`notebooks/02_ptf_models.ipynb`](notebooks/02_ptf_models.ipynb)
 - [x] Business layer: load shifting (imbalance cost left out: it depends on quantity forecast errors, and this project forecasts prices only)
 - [x] Demo application (local Streamlit app, October 2026)
+- [x] Round 2: temperature and hydro inputs, LEAR, tuning on 7 quarters, weekly-retrained final model, input importance, one-time test (October 2026)
+- [ ] Round 2 business model and demo update
 - [ ] Publish the demo online
-- [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; combining XGBoost and SARIMAX; hydro reservoir inputs
+- [ ] _Future work:_ daily retraining; learning the deviation from the baseline; combining tree models and LEAR; hydro reservoir inputs; consumption-weighted temperature
 - [ ] _Future work:_ consumption forecasting (national hourly demand)
 
 ## Data source
 
 EPİAŞ Transparency Platform — Enerji Piyasaları İşletme A.Ş. Data used with attribution, as permitted by the platform.
+
+Weather data by [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0).

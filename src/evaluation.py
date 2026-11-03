@@ -23,6 +23,15 @@ TRAIN_END = "2025-12-31"          # final model is trained on MODEL_START .. TRA
 TEST_PERIOD = ("2026-01-01", "2026-09-30")
 DEMO_START = "2026-10-01"
 
+# Round 2 (after the round-1 test was known): the round-1 test period becomes validation, so model choice also
+# sees the low-price regime of 2026; the new test starts on DEMO_START (October 2026, not used for any choice)
+ROUND2_FOLDS = WALK_FORWARD_FOLDS + [
+    ("2026Q1", "2026-01-01", "2026-03-31"),
+    ("2026Q2", "2026-04-01", "2026-06-30"),
+    ("2026Q3", "2026-07-01", "2026-09-30"),
+]
+ROUND2_TEST_START = DEMO_START
+
 
 def _day(text: str, end_of_day=False) -> pd.Timestamp:
     t = pd.Timestamp(text, tz=TIMEZONE)
@@ -34,9 +43,9 @@ def period(frame, first: str, last: str):
     return frame.loc[_day(first):_day(last, end_of_day=True)]
 
 
-def walk_forward_splits(X: pd.DataFrame, y: pd.Series):
+def walk_forward_splits(X: pd.DataFrame, y: pd.Series, folds=WALK_FORWARD_FOLDS):
     """Yield (fold name, X_train, y_train, X_val, y_val). Training ends the day before validation starts."""
-    for name, first, last in WALK_FORWARD_FOLDS:
+    for name, first, last in folds:
         train_last = (pd.Timestamp(first) - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
         yield (name, period(X, MODEL_START, train_last), period(y, MODEL_START, train_last),
                period(X, first, last), period(y, first, last))

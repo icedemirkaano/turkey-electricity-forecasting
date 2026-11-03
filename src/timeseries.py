@@ -41,6 +41,7 @@ logging.getLogger("cmdstanpy").disabled = True
 HOUR = pd.Timedelta(hours=1)
 SARIMAX_WINDOW_DAYS = 56   # SARIMAX is estimated on the last 8 weeks before the forecast period (memory, see fit)
 EXOG = ["net_load_forecast"]   # known ahead for every hour of D+1 (lag 0 is allowed, see src/features.py)
+# A spec may set its own inputs with "exog": [column names of the exog frame], or [] for none
 
 # Candidates; the one with the lowest mean validation MAE per family is kept
 TS_MODELS = {
@@ -109,10 +110,16 @@ def _slice(frame, first_day, last_day):
     return frame.loc[pd.Timestamp(first_day, tz=TIMEZONE): pd.Timestamp(last_day, tz=TIMEZONE) + 23 * HOUR]
 
 
+def exog_columns(spec: dict) -> list[str]:
+    """External inputs of a model: spec["exog"] if given (an empty list = none), else EXOG; none for Holt-Winters."""
+    return list(spec.get("exog", EXOG)) if spec["kind"] in USES_EXOG else []
+
+
 def fit(spec: dict, y: pd.Series, exog: pd.DataFrame, train_last: str):
     """Estimate the model on MODEL_START .. train_last. Returns (state, number of convergence warnings)."""
+    columns = exog_columns(spec)
     y_tr = _slice(y, MODEL_START, train_last).to_numpy()
-    x_tr = _slice(exog, MODEL_START, train_last).to_numpy()
+    x_tr = _slice(exog[columns], MODEL_START, train_last).to_numpy()
     if np.isnan(y_tr).any() or np.isnan(x_tr).any():
         raise ValueError("training data has missing values")
     with warnings.catch_warnings(record=True) as caught:
@@ -130,9 +137,9 @@ def fit(spec: dict, y: pd.Series, exog: pd.DataFrame, train_last: str):
             # Parameters from the last SARIMAX_WINDOW_DAYS of training only: memory grows linearly with the data
             # (~370 MB for 30 days, ~760 MB for 90 days measured), two years needed more than the 7.7 GB of WSL
             window = SARIMAX_WINDOW_DAYS * 24
-            model = SARIMAX(y_tr[-window:], exog=x_tr[-window:], order=spec["order"],
+            model = SARIMAX(y_tr[-window:], exog=x_tr[-window:] if columns else None, order=spec["order"],
                             seasonal_order=spec["seasonal_order"])
-            state = model.fit(disp=False)
+            state = model.fit(disp=False, maxiter=spec.get("maxiter", 50))   # 50 = statsmodels' default
     return state, sum(issubclass(w.category, ConvergenceWarning) for w in caught)
 
 
@@ -141,11 +148,12 @@ def day_ahead_forecasts(state, spec: dict, y: pd.Series, exog: pd.DataFrame, fir
     """Forecast every day first_day..last_day from the prices up to the previous day, one day at a time.
     `state` must be fitted up to the day before first_day. `update="append"` (SARIMAX only) re-filters the
     whole history instead of only the new day; used in the tests to check that both agree."""
-    uses_exog = spec["kind"] in USES_EXOG
+    columns = exog_columns(spec)
+    uses_exog = bool(columns)
     out = []
     for day in pd.date_range(first_day, last_day, freq="D", tz=TIMEZONE):
         hours = pd.date_range(day, periods=24, freq="h")
-        x_day = exog.loc[hours].to_numpy()
+        x_day = exog.loc[hours, columns].to_numpy()
         forecast = state.forecast(24, exog=x_day) if uses_exog else state.forecast(24)
         out.append(pd.Series(np.asarray(forecast), index=hours))
         # Only now, after the forecast, the day's actual prices become known

@@ -147,6 +147,17 @@ On the test period, the best variant of each family was scored under the two pro
 - **Trained once,** every classical model was better than the frozen XGBoost, because each one updates its forecast with the latest prices every day. None of them beat the baseline.
 - **Retrained weekly,** SARIMAX was 12% better than the baseline. It beat weekly XGBoost in February and August.
 
+**Information or model?** XGBoost sees 16 inputs, the classical models one or none. To separate the two reasons, both kinds of model were given the same information (2025 validation, mean MAE):
+
+| | Own past prices only | All inputs |
+|---|---|---|
+| Time series (SARIMA / SARIMAX) | 9.89 | 10.00 |
+| XGBoost | **8.34** | **6.88** |
+
+- **With the same information, XGBoost is still clearly better:** given only past prices and the hour, it reaches 8.34, better than every time series model, and better than ridge with all inputs (8.97).
+- **The extra inputs did not help the time series model.** SARIMAX with all inputs (load and wind forecasts, price cap, past solar, holidays, day of week) reached 10.00, worse than with the net load forecast alone (9.12). With the default 50 iterations its estimation did not converge (9.62); with 200 iterations it converged and the result got worse, so the problem is not the estimation. A linear model with a fixed pattern cannot use these inputs the way the price reacts to them (thresholds, the floor and the cap, a different effect of net load at noon and in the evening).
+- Thresholds set before the run: time series counted as competitive below 7.38, and "the gap is mostly information" if XGBoost with past prices only were above 8.6. Neither was reached. XGBoost kept its tuned settings with fewer inputs, which slightly favours the full model. Lasso-type autoregressive models from the price forecasting literature were not tried.
+
 **GRU tuning (Optuna).** The rule was set before the search: if the tuned GRU reached a mean validation MAE below 7.5, it would be added to the test table. The search covered history length (3, 7 or 14 days), layers, units, dropout, learning rate and batch size. It was planned for 25 trials and stopped after 15, because the best result had stopped improving and trials took up to an hour. The best settings, trained with three random seeds, reached **8.61** (untuned: 8.92). That is above the threshold, so the GRU was not scored on the test period.
 
 ### Business value: shifting flexible load
@@ -231,6 +242,7 @@ python -m scripts.posthoc_retrain --every week # post-hoc retraining experiment 
 python -m scripts.analyse_errors               # error analysis figures
 python -m scripts.evaluate_timeseries          # classical time series models, validation
 python -m scripts.evaluate_timeseries_test     # classical time series models, test (post-hoc)
+python -m scripts.information_vs_model         # same information for both model kinds (post-hoc, validation)
 python -m scripts.tune_gru                     # Optuna search for the GRU (several hours)
 python -m scripts.evaluate_load_shifting       # business layer: load shifting with the test forecasts
 ```

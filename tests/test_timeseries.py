@@ -71,3 +71,16 @@ def test_a_day_is_forecast_without_its_own_prices(kind):
     changed.loc["2024-03-05"] += 1000                                    # change the last day's actual prices
     after = day_ahead_forecasts(results, SMALL[kind], changed, exog, "2024-03-01", "2024-03-05")
     assert np.allclose(before, after)                                    # its forecast must not move
+
+
+@pytest.mark.parametrize("columns", [[], ["load_forecast", "wind_forecast"]])
+def test_sarimax_with_its_own_inputs(columns):
+    # "exog" in the spec chooses the inputs: none, or several columns of the exog frame
+    t = table()
+    y, _ = hourly_inputs(t)
+    exog = t[["load_forecast", "wind_forecast"]] / 1000
+    spec = {**SMALL["sarimax"], "exog": columns}
+    state, _ = fit(spec, y, exog, "2024-02-29")
+    assert state.model.k_exog == len(columns)
+    pred = day_ahead_forecasts(state, spec, y, exog, "2024-03-01", "2024-03-03")
+    assert pred.index.equals(y.loc["2024-03-01":"2024-03-03"].index) and np.isfinite(pred).all()

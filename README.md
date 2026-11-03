@@ -175,12 +175,17 @@ With 8 flexible hours the picture is the same (XGBoost trained once 85%, retrain
 
 The demo uses days that no training run or model choice had seen. Following the retraining result, the tuned XGBoost is retrained every Monday on all data up to the day before:
 
-| Forecast, 1–29 October 2026 | MAE | Days better than the baseline |
-|---|---|---|
-| XGBoost, retrained weekly | 7.84 | 19 of 29 |
-| Same hour yesterday | 11.56 | – |
+| Forecast, 1–29 October 2026 | MAE | Days better than the baseline | 4-hour job: captured share of the possible saving |
+|---|---|---|---|
+| XGBoost, retrained weekly | 7.84 | 19 of 29 | 85% |
+| Same hour yesterday | 11.56 | – | 82% |
 
-The demo app shows, for any day: the 24 forecast and actual prices, the cheapest and most expensive hours, and what a purchase or a flexible job would cost.
+In October the model was clearly better at the price level (MAE), but only slightly better at picking the cheapest hours: yesterday's daily pattern was already a good guide to today's.
+
+The demo app is built for one user and one decision: a business with a flexible job (a few hours a day) planning tomorrow's consumption.
+
+- **Tomorrow's plan:** the forecast as it looked on the day before, with the hours to run the job (green) and to avoid (red) and the expected saving. What actually happened is revealed only on request.
+- **Can I trust it?:** the same forecasts checked against the actual prices over all demo days, against the same-hour-yesterday baseline.
 
 ### Limitations
 

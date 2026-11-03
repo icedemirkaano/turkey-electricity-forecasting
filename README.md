@@ -195,10 +195,17 @@ The demo uses days that no training run or model choice had seen. Following the 
 
 In October the model was clearly better at the price level (MAE), but only slightly better at picking the cheapest hours: yesterday's daily pattern was already a good guide to today's.
 
-The demo app is built for one user and one decision: a business with a flexible job (a few hours a day) planning tomorrow's consumption.
+**The demo app now uses the round-2 model** (below): tuned HistGradientBoosting, retrained every Monday, 1 October – 1 November 2026. Its forecasts are identical to the round-2 test. The app is built for one user and one decision: the operator of a power plant deciding, before the 12:30 deadline, whether to prepare to run tomorrow and which block to offer (see *Business value, round 2*).
 
-- **Tomorrow's plan:** the forecast as it looked on the day before, with the hours to run the job (green) and to avoid (red) and the expected saving. What actually happened is revealed only on request.
-- **Can I trust it?:** the same forecasts checked against the actual prices over all demo days, against the same-hour-yesterday baseline.
+- **Tomorrow's plan:**
+  - The user sets the plant's fuel cost, its minimum run time and the cost of a start.
+  - For a chosen day, the app shows the forecast as it looked on the day before. The block to offer is green, hours below the cost are red.
+  - It recommends a block with its expected profit, or "stay off".
+  - On request it reveals the actual prices and the profit of following the model, yesterday's prices and perfect foresight.
+- **Can I trust it?:**
+  - Forecast error over all demo days against the same-hour-yesterday baseline.
+  - The plant's profit over the period for the chosen cost.
+  - The extra profit from the model at every plant cost.
 
 ### Round 2: temperature, hydro and a new split
 
@@ -292,6 +299,57 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 - **Beating the dummy and the baseline:** what mattered was how often the model is retrained, not the inputs. Trained once per quarter, no model beat the baseline in 2026Q2. Retrained weekly, the chosen model beat it in every validation quarter and in the test.
 - **Time series models:** SARIMAX, Prophet, Holt-Winters and LEAR were all tried. LEAR, the strongest, is competitive in stable periods (2025: 7.16, vs 7.15–7.27 for the untuned tree models and 6.88 for tuned XGBoost). It breaks when the market regime changes (2026Q2). Tree models handle the thresholds in the price (floor, cap, low-price periods) better.
 
+### Business value, round 2: should a power plant prepare to run tomorrow?
+
+> Designed after the round-2 test result was known. No model was retrained; the saved round-2 test forecasts (1 October – 1 November 2026) were reused.
+
+Load shifting (above) only needs the **order** of tomorrow's hours, and even yesterday's prices give a good order. A power plant's decision also needs the **level**: is tomorrow's price above my cost?
+
+**The decision.** A 1 MW plant has a variable cost of X USD/MWh (fuel). Hour by hour, the day-ahead auction decides by itself whether the plant runs: an hourly offer at X is accepted only when the price is higher. What the auction cannot decide is what must be fixed on day D, **before** the prices are known:
+
+- which block of hours to offer;
+- how much gas to nominate;
+- whether to staff and prepare a start-up.
+
+That pre-auction decision is simulated (`src/plant.py`), as a simplified unit commitment of a gas plant:
+
+- The plant runs in at most one block of consecutive hours per day, at least 4 hours long. Each start costs 50 USD.
+- It picks the block where the forecast margin (forecast price − X) adds up to the most. If that block does not cover the start cost, it stays off.
+- It then earns the **actual** price in the hours it runs.
+
+**References:**
+
+- **Perfect foresight:** the best block by actual prices.
+- **Always run:** no forecast needed.
+
+**Costs and assumptions.** The plant's cost is not known, so X is swept from 20 to 90 USD/MWh. In October the median price was 61.8. The start cost and the minimum run time are also assumptions; other values are reported below.
+
+Profit over the 32 test days (USD, 1 MW, minimum run 4 h, start cost 50 USD):
+
+| Plant cost (USD/MWh) | Perfect foresight | **Model** | Same hour yesterday | Always run | **Model − baseline** |
+|---|---|---|---|---|---|
+| 20 | 28,593 | 28,591 | 28,164 | 28,546 | +428 |
+| 30 | 21,252 | 21,098 | 20,449 | 20,866 | +649 |
+| 40 | 14,272 | 13,802 | 12,494 | 13,186 | **+1,308** |
+| 50 | 8,064 | 7,535 | 6,539 | 5,506 | +996 |
+| 60 | 3,410 | 2,477 | 2,071 | −2,174 | +406 |
+| 70 | 710 | 446 | 233 | −9,854 | +213 |
+| 80 | 7 | −20 | −84 | −17,534 | +63 |
+
+- **The model earned more than the baseline at every cost from 20 to 80 USD/MWh.** The gain was 60–1,300 USD per MW over the 32 days.
+- **The expectation written before the run was only partly right.** It said the gap would be largest at costs near the typical price (50–70). In USD it was largest at 40–50, where the plant runs many hours and many hours are at stake.
+- **A forecast matters where the decision is close.** For a cheap plant (20), always running is already 99.8% of perfect. At a cost of 60, always running loses money (−2,174), while the model earns 2,477.
+- **The gain comes from a few unusual days.** At a cost of 50, the model and the baseline made the same decision on 15 of 32 days. The model was better on 12 and worse on 5. Example, Sunday 11 October: midday prices fell to 0. The baseline copied Saturday's prices and ran all day, losing 146 USD. The model ran only the evening block and earned 105 USD; perfect foresight would have earned 113.
+- **Other run rules give the same picture.** With start costs of 0, 50 or 150 USD and a minimum run of 4 or 8 hours, the model earned more than the baseline in 15 of 16 combinations. In the 16th, cost 75 with a start cost of 150, all three forecasts kept the plant off. For a plant near the typical price with an expensive start (cost 65, start 150), both lost money: the model −214 USD, the baseline −691. A safety margin before starting could help, but it must be set on validation data, not on this test.
+
+Simplifications:
+
+- one block per day (a real plant can start twice);
+- the plant does not move the price;
+- one month of data.
+
+The result is a comparison between forecasts under the same rules, not a plant's real profit.
+
 ### Limitations
 
 - The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
@@ -350,12 +408,13 @@ python -m scripts.tune_models --round 2        # Optuna search on the 7 quarters
 python -m scripts.round2_weekly                # final choice with weekly retraining
 python -m scripts.round2_importance            # ablation and permutation importance
 python -m scripts.round2_test                  # the one-time round-2 test
+python -m scripts.evaluate_plant               # business layer: plant run decision with the round-2 test forecasts
 ```
 
 Demo (October 2026 onwards):
 
 ```bash
-python -m scripts.make_demo_forecasts          # weekly retrained forecasts -> app/data/demo_forecasts.csv
+python -m scripts.make_demo_forecasts          # round-2 model, weekly retrained -> app/data/demo_forecasts.csv
 streamlit run app/streamlit_app.py             # opens the app at http://localhost:8501
 ```
 
@@ -370,9 +429,10 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Business layer: load shifting (imbalance cost left out: it depends on quantity forecast errors, and this project forecasts prices only)
 - [x] Demo application (local Streamlit app, October 2026)
 - [x] Round 2: temperature and hydro inputs, LEAR, tuning on 7 quarters, weekly-retrained final model, input importance, one-time test (October 2026)
-- [ ] Round 2 business model and demo update
+- [x] Round 2 business layer: pre-auction run decision of a power plant
+- [x] Demo update to the round-2 model and the plant decision
 - [ ] Publish the demo online
-- [ ] _Future work:_ daily retraining; learning the deviation from the baseline; combining tree models and LEAR; hydro reservoir inputs; consumption-weighted temperature
+- [ ] _Future work:_ daily retraining; learning the deviation from the baseline; combining tree models and LEAR; hydro reservoir inputs; consumption-weighted temperature; plant decision with a safety margin set on validation and two starts per day
 - [ ] _Future work:_ consumption forecasting (national hourly demand)
 
 ## Data source

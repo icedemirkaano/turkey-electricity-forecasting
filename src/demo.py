@@ -1,20 +1,20 @@
 """Calculations behind the demo app (app/streamlit_app.py), kept here so they can be tested without Streamlit.
 
 The app reads app/data/demo_forecasts.csv (written by scripts/make_demo_forecasts.py): hourly actual price,
-the weekly retrained XGBoost forecast and the same-hour-yesterday baseline, for days no model has seen.
-User story: a business with a flexible job (n hours at a given power) plans tomorrow's consumption from the
-forecast: run the job in the cheapest hours, avoid the most expensive ones.
+the round-2 model's forecast (weekly retrained) and the same-hour-yesterday baseline, for days no choice used.
+User story: the operator of a power plant decides on day D, before the 12:30 offer deadline and before the prices
+are known, whether to prepare the plant for D+1 and which block of hours to offer (src/plant.py).
 """
 
 from pathlib import Path
 
 import pandas as pd
 
-from src.business import chosen_hours, daily_costs, shifting_summary
 from src.config import ROOT, TIMEZONE
+from src.plant import best_block, plant_summary
 
 DEMO_FILE = ROOT / "app" / "data" / "demo_forecasts.csv"
-FORECAST, BASELINE = "xgboost (weekly retrain)", "same hour yesterday"
+FORECAST, BASELINE = "model (weekly retrain)", "same hour yesterday"
 
 
 def load_demo(path: Path = DEMO_FILE) -> pd.DataFrame:
@@ -35,30 +35,32 @@ def one_day(demo: pd.DataFrame, day) -> pd.DataFrame:
     return part.set_index(part.index.hour.rename("hour"))
 
 
-def extreme_hours(prices: pd.Series, n_hours: int, cheapest=True) -> list[int]:
-    """Hours of day (sorted) with the n lowest (or highest) prices; ties: earlier hour first."""
-    values = prices if cheapest else -prices
-    pick = chosen_hours(values.set_axis(pd.date_range("2000-01-01", periods=24, freq="h")), n_hours).to_numpy()
-    return sorted(prices.index[pick])
+def block_hours(block: tuple[int, int] | None) -> list[int]:
+    return [] if block is None else list(range(block[0], block[1] + 1))
 
 
-def plan(day: pd.DataFrame, n_hours: int, power_mw: float) -> dict:
-    """What the forecast says on the day before: when to run the job, when to avoid, and the expected saving."""
-    run, avoid = extreme_hours(day[FORECAST], n_hours), extreme_hours(day[FORECAST], n_hours, cheapest=False)
-    expected, day_mean = day.loc[run, FORECAST].mean(), day[FORECAST].mean()
-    return {"run": run, "avoid": avoid, "expected_price": expected, "day_mean": day_mean,
-            "expected_saving": (day_mean - expected) * n_hours * power_mw}
+def realised_profit(day: pd.DataFrame, block: tuple[int, int] | None, cost: float, start_cost: float) -> float:
+    """Profit (USD per MW) of running `block` at the ACTUAL prices of the day; 0 when the plant stays off."""
+    hours = block_hours(block)
+    return float((day.loc[hours, "actual"] - cost).sum() - start_cost) if hours else 0.0
 
 
-def outcome(day: pd.DataFrame, n_hours: int, power_mw: float) -> dict:
-    """What actually happened: price paid when following the plan, against no shifting and perfect foresight."""
-    run = extreme_hours(day[FORECAST], n_hours)
-    paid, day_mean = day.loc[run, "actual"].mean(), day["actual"].mean()
-    perfect = day["actual"].nsmallest(n_hours).mean()
-    return {"paid": paid, "day_mean": day_mean, "perfect": perfect,
-            "saving": (day_mean - paid) * n_hours * power_mw,
-            "possible_saving": (day_mean - perfect) * n_hours * power_mw,
-            "mae": (day[FORECAST] - day["actual"]).abs().mean()}
+def plan(day: pd.DataFrame, cost: float, min_hours: int, start_cost: float) -> dict:
+    """What the forecast says on the day before: the block to offer (or stay off) and the expected profit."""
+    block = best_block(day[FORECAST].to_numpy() - cost, min_hours, start_cost)
+    hours = block_hours(block)
+    expected = float((day.loc[hours, FORECAST] - cost).sum() - start_cost) if hours else 0.0
+    return {"block": block, "hours": hours, "expected_profit": expected}
+
+
+def outcome(day: pd.DataFrame, cost: float, min_hours: int, start_cost: float) -> dict:
+    """What actually happened, per decision source: the block chosen and its profit at the actual prices."""
+    sources = {"model": day[FORECAST], "same hour yesterday": day[BASELINE], "perfect foresight": day["actual"]}
+    result = {}
+    for name, prices in sources.items():
+        block = best_block(prices.to_numpy() - cost, min_hours, start_cost)
+        result[name] = {"block": block, "profit": realised_profit(day, block, cost, start_cost)}
+    return result
 
 
 def period_accuracy(demo: pd.DataFrame) -> dict:
@@ -69,7 +71,14 @@ def period_accuracy(demo: pd.DataFrame) -> dict:
             "days_better": int((daily[FORECAST] < daily[BASELINE]).sum()), "daily": daily}
 
 
-def period_shifting(demo: pd.DataFrame, n_hours: int) -> pd.DataFrame:
-    """Load shifting over the demo period (src/business.py) when hours are chosen by the forecast or by the baseline."""
-    return pd.DataFrame({name: shifting_summary(daily_costs(demo["actual"], demo[name], n_hours), n_hours)
-                         for name in (FORECAST, BASELINE)}).T
+def period_plant(demo: pd.DataFrame, cost: float, min_hours: int, start_cost: float) -> pd.DataFrame:
+    """Plant decision over the demo period (src/plant.py): profit per decision source, plus the references."""
+    forecasts = {"model": demo[FORECAST], "same hour yesterday": demo[BASELINE]}
+    return plant_summary(demo["actual"], forecasts, cost, min_hours, start_cost)
+
+
+def profit_by_cost(demo: pd.DataFrame, costs, min_hours: int, start_cost: float) -> pd.DataFrame:
+    """Total profit (USD per MW) of each decision source for a range of plant costs, one row per cost."""
+    table = pd.DataFrame({c: period_plant(demo, c, min_hours, start_cost)["profit"] for c in costs}).T
+    table.index.name = "cost"
+    return table

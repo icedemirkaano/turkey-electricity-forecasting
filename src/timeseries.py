@@ -6,9 +6,11 @@ Three families:
   - Prophet: trend + daily/weekly(/yearly) seasonality + official holidays + the net load forecast as a regressor.
     Prophet has no state to update, so it is re-fitted every day on all prices known so far (about 1-2 s per fit).
 Day-ahead protocol, the same information as every other model in this project:
-  parameters are estimated once on the training data; then, day by day, the model forecasts the 24 hours
-  of D+1 from the prices up to D 23:00, and only afterwards receives D+1's actual prices (state update,
-  no re-estimation). So the forecast for a day never sees that day's prices.
+  `fit` estimates the parameters on the data up to a given day; then `day_ahead_forecasts` goes day by day:
+  the model forecasts the 24 hours of D+1 from the prices up to D 23:00, and only afterwards receives D+1's
+  actual prices (state update, no re-estimation). So the forecast for a day never sees that day's prices.
+  How often `fit` is called is up to the caller: once per validation quarter (scripts/evaluate_timeseries.py),
+  or once / every week on the test period (scripts/evaluate_timeseries_test.py).
 State update:
   - SARIMAX: `extend` of the state space results (filters only the new day; equal to `append`, tested).
   - Holt-Winters: the classic statsmodels implementation; the smoothing recursion is re-run with the

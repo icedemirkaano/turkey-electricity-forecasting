@@ -149,6 +149,28 @@ On the test period, the best variant of each family was scored under the two pro
 
 **GRU tuning (Optuna).** The rule was set before the search: if the tuned GRU reached a mean validation MAE below 7.5, it would be added to the test table. The search covered history length (3, 7 or 14 days), layers, units, dropout, learning rate and batch size. It was planned for 25 trials and stopped after 15, because the best result had stopped improving and trials took up to an hour. The best settings, trained with three random seeds, reached **8.61** (untuned: 8.92). That is above the threshold, so the GRU was not scored on the test period.
 
+### Business value: shifting flexible load
+
+> Designed after the test result was known. No model was retrained; the saved test forecasts were reused.
+
+A consumer has a flexible job that needs 4 (or 8) hours of 1 MW every day, in any hours. On day D it runs the job in the hours of D+1 that the forecast says are cheapest, and pays the **actual** prices. Two references: no shifting (the day's average price), and perfect foresight (the truly cheapest hours). *Captured share* is the part of the possible saving that the forecast achieved.
+
+Test period, 4 flexible hours per day (average price paid, USD/MWh):
+
+| Forecast | Price paid | Saving vs. no shifting | Captured share | Days worse than no shifting |
+|---|---|---|---|---|
+| No shifting | 43.09 | – | 0% | – |
+| **XGBoost, trained once (reported)** | **24.25** | **18.83** | **85%** | 3 of 273 |
+| Same hour last week | 26.01 | 17.08 | 77% | 8 |
+| Same hour yesterday | 27.14 | 15.94 | 72% | 13 |
+| *XGBoost, retrained weekly (post-hoc)* | *24.32* | *18.77* | *85%* | *2* |
+| *SARIMAX, retrained weekly (post-hoc)* | *25.83* | *17.26* | *78%* | *13* |
+| Perfect foresight | 20.98 | 22.11 | 100% | – |
+
+With 8 flexible hours the picture is the same (XGBoost trained once 85%, retrained weekly 86%, same hour yesterday 72%).
+
+**The model that failed on MAE was the best at this decision.** For choosing hours only the order of the prices within a day matters, not their level. The frozen model forecast too high in spring, but it still ranked the hours well. It captured more of the possible saving than the baseline in every month except June (92.5% vs 94.3%). The gap was largest in January–March (23–28 percentage points). In April–May every forecast captured 88–97%, because with many hours at the price floor (95 and 214 hours) the cheap hours were easy to find.
+
 ### Limitations
 
 - The validation year (2025) had only 42 price-floor hours, so validation could not reveal the weakness at long low-price periods.
@@ -194,6 +216,7 @@ python -m scripts.analyse_errors               # error analysis figures
 python -m scripts.evaluate_timeseries          # classical time series models, validation
 python -m scripts.evaluate_timeseries_test     # classical time series models, test (post-hoc)
 python -m scripts.tune_gru                     # Optuna search for the GRU (several hours)
+python -m scripts.evaluate_load_shifting       # business layer: load shifting with the test forecasts
 ```
 
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
@@ -204,7 +227,7 @@ Fetching requires a free EPİAŞ Transparency Platform account. The script can b
 - [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
 - [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
 - [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis
-- [ ] Business layer: buying cost and imbalance cost
+- [x] Business layer: load shifting (imbalance cost left out: it depends on quantity forecast errors, and this project forecasts prices only)
 - [ ] Demo application
 - [ ] _Future work:_ daily retraining; learning the deviation from the baseline with XGBoost; combining XGBoost and SARIMAX; hydro reservoir inputs
 - [ ] _Future work:_ consumption forecasting (national hourly demand)

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from src.evaluation import (DEMO_START, TEST_PERIOD, TRAIN_END, WALK_FORWARD_FOLDS, mae, rmse, scores,
-                            scores_by_month, walk_forward_splits)
+                            scores_by_month, sign_test, walk_forward_splits)
 
 TZ = "Europe/Istanbul"
 
@@ -17,7 +17,7 @@ def hourly(start="2024-01-01", end="2026-10-31 23:00"):
 def test_folds_train_only_on_the_past_and_cover_2025():
     X, y = hourly()
     seen = []
-    for name, X_tr, y_tr, X_val, y_val in walk_forward_splits(X, y):
+    for _, X_tr, _, X_val, _ in walk_forward_splits(X, y):
         assert X_tr.index.max() < X_val.index.min()                     # no future in training
         assert X_tr.index.min() == pd.Timestamp("2024-01-01", tz=TZ)    # expanding window from the model start
         assert X_val.index.max() <= pd.Timestamp(f"{TRAIN_END} 23:00", tz=TZ)  # validation never reaches the test
@@ -62,3 +62,9 @@ def test_weekly_retrain_windows_cover_the_period_once():
     assert all(s.dayofweek == 0 for s, _ in windows[1:])                          # later ones start on Monday
     days = sum((e - s).days + 1 for s, e in windows)
     assert days == 273 and len(windows) == 40
+
+
+def test_sign_test():
+    assert sign_test(1, 1) == 0.5                    # one coin flip
+    assert sign_test(0, 10) == 1.0                   # at least 0 wins: certain
+    assert abs(sign_test(24, 32) - 0.0035) < 1e-4    # the round-2 test: 24 of 32 days

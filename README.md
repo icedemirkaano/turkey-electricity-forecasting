@@ -2,7 +2,26 @@
 
 Forecasting next-day **hourly electricity prices (PTF)** in the Turkish day-ahead electricity market, using public data from the [EPİAŞ Transparency Platform](https://seffaflik.epias.com.tr).
 
-> 🚧 Work in progress — capstone project of the Workintech Data Science bootcamp.
+Capstone project of the Workintech Data Science bootcamp (November 2026).
+
+## At a glance
+
+- **Forecast:** the 24 hourly prices of tomorrow, made before the 12:30 offer deadline from 21 inputs known at that moment (past prices, EPİAŞ load and wind forecasts, temperature forecasts, past generation, calendar).
+- **Model:** tuned HistGradientBoosting, **retrained every Monday**. Chosen by a rule fixed in advance on 21 months of walk-forward validation.
+- **Test** (1 October – 1 November 2026, days no choice used, scored once):
+  - MAE **7.74 USD/MWh**, against 11.37 for the same hour yesterday: **32% less error**.
+  - Better on 24 of 32 days. The chance of that record if both forecasts were equally good is about 0.35% (sign test).
+- **Decision:** a power plant must fix before the auction which block to offer, how much gas to nominate and whether to staff a start. With these forecasts, a 1 MW plant earned more than with the baseline at every fuel cost from 20 to 80 USD/MWh, up to +1,308 USD in 32 days.
+- **Demo:** a Streamlit app for the plant operator (`app/`), on the test days.
+
+![One test week, hour by hour](reports/figures/round2/01_test_week_hourly.png)
+
+The project went through two rounds:
+
+- **Round 1:** the first model, trained once, failed its test in a long low-price period.
+- **Round 2:** after the instructor's review, temperature and hydro inputs were added and the model was retrained every week. The model was chosen again on a new split and tested once more.
+
+Both rounds are reported in full below, failures included.
 
 ## Problem
 
@@ -263,6 +282,8 @@ Tuning helped mainly in 2026Q2 (HistGradientBoosting 17.01 → 12.88). Still tra
 
 HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set rule decided. LEAR failed again in 2026Q2 (19.96).
 
+![Validation MAE per quarter, trained once per quarter vs every Monday](reports/figures/round2/02_retraining_by_quarter.png)
+
 **Step 4: which inputs matter** (chosen model, validation). Two checks:
 
 - **Ablation:** drop a group, retrain weekly. Answers "would we miss these inputs?".
@@ -280,6 +301,8 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 - A likely reason that temperature adds so little: EPİAŞ's load forecast already depends on the weather. This was not tested directly.
 - Differences of about 0.1 are close to noise. Dropping both groups (7.81) scored better than dropping temperature alone (7.87). The settings were also tuned with all v2 inputs, which slightly favours them.
 
+![Permutation importance of the chosen model](reports/figures/round2/03_permutation_importance.png)
+
 **Step 5: test, 1 October – 1 November 2026, scored once**
 
 | Forecast, retrained every Monday | MAE | RMSE | MAE at price-floor hours (18) | vs. baseline |
@@ -289,7 +312,8 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 | Same hour yesterday | 11.37 | 17.71 | 29.45 | – |
 | Same hour last week | 15.02 | 19.40 | 1.26 | 32% worse |
 
-- The chosen model beat the baseline in all 5 weeks and on 24 of 32 days.
+- The chosen model beat the baseline in all 5 weeks and on 24 of 32 days. If both forecasts were equally good, each day would be a coin flip, and a record of 24 or more out of 32 would happen by chance with a probability of about 0.35% (one-sided sign test, `src/evaluation.sign_test`).
+- The test covers one month because no other unseen data exists. The round-1 test period had been looked at, so round 2 uses it for validation.
 - The test error matches validation: 7.74 on the test vs 7.73 on validation, so tuning and model choice were not overly optimistic.
 - October 2026 had already been shown in the round-1 demo, with a different model. No round-2 choice used it.
 
@@ -340,6 +364,10 @@ Profit over the 32 test days (USD, 1 MW, minimum run 4 h, start cost 50 USD):
 - **The expectation written before the run was only partly right.** It said the gap would be largest at costs near the typical price (50–70). In USD it was largest at 40–50, where the plant runs many hours and many hours are at stake.
 - **A forecast matters where the decision is close.** For a cheap plant (20), always running is already 99.8% of perfect. At a cost of 60, always running loses money (−2,174), while the model earns 2,477.
 - **The gain comes from a few unusual days.** At a cost of 50, the model and the baseline made the same decision on 15 of 32 days. The model was better on 12 and worse on 5. Example, Sunday 11 October: midday prices fell to 0. The baseline copied Saturday's prices and ran all day, losing 146 USD. The model ran only the evening block and earned 105 USD; perfect foresight would have earned 113.
+
+![Sunday 11 October 2026: forecasts and the block each one chose](reports/figures/round2/05_example_day_2026_10_11.png)
+
+![Extra profit from the model over the baseline, by plant cost](reports/figures/round2/04_plant_extra_profit_by_cost.png)
 - **Other run rules give the same picture.** With start costs of 0, 50 or 150 USD and a minimum run of 4 or 8 hours, the model earned more than the baseline in 15 of 16 combinations. In the 16th, cost 75 with a start cost of 150, all three forecasts kept the plant off. For a plant near the typical price with an expensive start (cost 65, start 150), both lost money: the model −214 USD, the baseline −691. A safety margin before starting could help, but it must be set on validation data, not on this test.
 
 Simplifications:
@@ -361,16 +389,38 @@ The result is a comparison between forecasts under the same rules, not a plant's
 ## Project structure
 
 ```
-src/              reusable code (data, features, evaluation, models)
-scripts/          command-line entry points
-notebooks/        analysis notebooks, one per phase
-tests/            unit tests for src/
+src/              reusable code (data, features, evaluation, models, business decisions)
+scripts/          command-line entry points (each writes to reports/)
+notebooks/        01 exploratory analysis, 02 models (reads the saved results)
+tests/            unit tests for src/ (python -m pytest)
 reports/figures/  charts used in this README
 reports/results/  scores and predictions (CSV)
 app/              demo application (Streamlit)
 data/             raw / interim / processed data (not committed)
 models/           trained models (not committed)
 ```
+
+The path from data to decision, one module per step:
+
+| Step | Module | What it does |
+|---|---|---|
+| Download | `src/fetch.py`, `src/weather.py` | EPİAŞ tables month by month; Open-Meteo temperature forecasts |
+| Clean and join | `src/clean.py`, `src/dataset.py` | one row per hour; every column labelled by when it is known |
+| Inputs | `src/features.py` | builds the inputs and refuses any input that would use the future |
+| Evaluation | `src/evaluation.py` | walk-forward folds, test periods, metrics, baselines, sign test |
+| Models | `src/models.py`, `src/tuning.py`, `src/retraining.py` | model catalogue, Optuna search, weekly retraining loop |
+| Other model families | `src/timeseries.py`, `src/lear.py`, `src/gru.py`, `src/sequences.py` | SARIMAX / Prophet / Holt-Winters, LEAR, GRU |
+| Decisions | `src/plant.py`, `src/business.py` | plant run decision; load shifting |
+| Demo | `src/demo.py`, `app/streamlit_app.py` | calculations behind the app; the app |
+
+Scripts by purpose:
+
+- **Data:** `fetch_data`, `fetch_weather`, `build_dataset`.
+- **Data checks:** `profile_raw`, `check_*`, `inspect_*`, `plot_*` (one-off checks behind the cleaning decisions).
+- **Round 1:** `evaluate_baselines`, `compare_models`, `tune_models`, `evaluate_gru`, `train_final_xgboost`, `evaluate_test`, `analyse_errors`.
+- **Round 1, post-hoc:** `posthoc_retrain`, `evaluate_timeseries`, `evaluate_timeseries_test`, `information_vs_model`, `tune_gru`, `evaluate_load_shifting`.
+- **Round 2:** `round2_compare`, `tune_models --round 2`, `round2_weekly`, `round2_importance`, `round2_test`, `evaluate_plant`, `round2_figures`.
+- **Demo:** `make_demo_forecasts`.
 
 ## How to run
 
@@ -409,6 +459,7 @@ python -m scripts.round2_weekly                # final choice with weekly retrai
 python -m scripts.round2_importance            # ablation and permutation importance
 python -m scripts.round2_test                  # the one-time round-2 test
 python -m scripts.evaluate_plant               # business layer: plant run decision with the round-2 test forecasts
+python -m scripts.round2_figures               # the round-2 figures in this README
 ```
 
 Demo (October 2026 onwards):
@@ -418,22 +469,31 @@ python -m scripts.make_demo_forecasts          # round-2 model, weekly retrained
 streamlit run app/streamlit_app.py             # opens the app at http://localhost:8501
 ```
 
+A day can be opened directly, with the actual prices shown: `http://localhost:8501/?day=2026-10-11&reveal=1`.
+
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
 
-## Roadmap
+## Status
 
-- [x] Data inventory and download pipeline
-- [x] Price (PTF) data preparation: cleaning decisions and hourly dataset
-- [x] Price (PTF) exploratory analysis — [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb)
-- [x] Price forecasting models (classical ML, deep learning, classical time series), test and error analysis — [`notebooks/02_ptf_models.ipynb`](notebooks/02_ptf_models.ipynb)
-- [x] Business layer: load shifting (imbalance cost left out: it depends on quantity forecast errors, and this project forecasts prices only)
-- [x] Demo application (local Streamlit app, October 2026)
-- [x] Round 2: temperature and hydro inputs, LEAR, tuning on 7 quarters, weekly-retrained final model, input importance, one-time test (October 2026)
-- [x] Round 2 business layer: pre-auction run decision of a power plant
-- [x] Demo update to the round-2 model and the plant decision
-- [ ] Publish the demo online
-- [ ] _Future work:_ daily retraining; learning the deviation from the baseline; combining tree models and LEAR; hydro reservoir inputs; consumption-weighted temperature; plant decision with a safety margin set on validation and two starts per day
-- [ ] _Future work:_ consumption forecasting (national hourly demand)
+Complete. Delivered:
+
+- Data pipeline: download, cleaning and the hourly dataset.
+- Exploratory analysis: [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb).
+- Price models: classical ML, deep learning, classical time series and LEAR, with two rounds of choice and test. See [`notebooks/02_ptf_models.ipynb`](notebooks/02_ptf_models.ipynb).
+- Two decision layers: load shifting and the plant run decision.
+- A local demo app.
+
+Imbalance cost was left out, because it depends on quantity forecast errors and this project forecasts prices only.
+
+Possible extensions:
+
+- daily retraining;
+- combining the tree models with LEAR;
+- hydro reservoir inputs;
+- a consumption-weighted temperature;
+- a safety margin for the plant decision, set on validation;
+- two starts per day;
+- publishing the demo online.
 
 ## Data source
 

@@ -1,10 +1,15 @@
 """Shared evaluation setup: walk-forward folds, test period, metrics and simple baselines.
 
 Every model is evaluated on exactly the same periods with exactly the same metrics:
+  round 1
   - validation: quarterly walk-forward over 2025 (train on everything before each quarter)
   - test: January-September 2026, used once at the end
-  - demo: October 2026 onwards (never used for training or model choice)
+  round 2 (after the round-1 test was known)
+  - validation: ROUND2_FOLDS, 2025Q1-2026Q3 (the round-1 test becomes validation)
+  - test: October 2026 onwards (ROUND2_TEST_START), used once; also the demo period
 """
+
+import math
 
 import numpy as np
 import pandas as pd
@@ -57,6 +62,14 @@ def mae(y_true, y_pred) -> float:
 
 def rmse(y_true, y_pred) -> float:
     return float(np.sqrt(np.mean((np.asarray(y_true) - np.asarray(y_pred)) ** 2)))
+
+
+def sign_test(wins: int, n: int) -> float:
+    """One-sided p-value of winning at least  of  days if both forecasts were equally good
+    (each day a coin flip): how likely such a record is by chance alone."""
+    if not 0 <= wins <= n:
+        raise ValueError("wins must be between 0 and n")
+    return sum(math.comb(n, k) for k in range(wins, n + 1)) / 2 ** n
 
 
 def scores(y_true: pd.Series, y_pred: pd.Series, flags: pd.DataFrame | None = None) -> dict:

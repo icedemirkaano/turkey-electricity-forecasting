@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from src.evaluation import mae
 from src.lear import LEAR, N_FEATURES, InvariantScaler, day_inputs

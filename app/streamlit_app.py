@@ -7,6 +7,7 @@ are known (which block to offer, gas, crew, start-up) needs a forecast. Two tabs
   - Can I trust it?: the same forecasts checked against the actual prices over the whole demo period
 Run from the repository root:
     streamlit run app/streamlit_app.py
+Deep link to a day with the actual prices shown: http://localhost:8501/?day=2026-10-11&reveal=1
 Reads app/data/demo_forecasts.csv (python -m scripts.make_demo_forecasts); trains nothing itself.
 """
 
@@ -33,8 +34,8 @@ def data():
 
 
 @st.cache_data
-def cost_sweep(min_hours, start_cost):
-    return profit_by_cost(data(), COSTS, min_hours, start_cost)
+def cost_sweep(run_hours, start_price):
+    return profit_by_cost(data(), COSTS, run_hours, start_price)
 
 
 def block_text(block) -> str:
@@ -63,7 +64,10 @@ plan_tab, trust_tab = st.tabs(["Tomorrow's plan", "Can I trust it?"])
 
 # --- Tab 1: the plan, as it looked on the day before ---------------------------------------------------------
 with plan_tab:
-    day = st.selectbox("Delivery day", available[::-1], format_func=lambda d: f"{d:%A %d %B %Y}")
+    choices = available[::-1]
+    asked = st.query_params.get("day")   # deep link, e.g. ?day=2026-10-11&reveal=1
+    index = next((i for i, d in enumerate(choices) if f"{d:%Y-%m-%d}" == asked), 0)
+    day = st.selectbox("Delivery day", choices, index=index, format_func=lambda d: f"{d:%A %d %B %Y}")
     today = one_day(demo, day)
     p = plan(today, cost, min_hours, start_cost)
     st.markdown(f"Forecast made on **{day - timedelta(days=1):%A %d %B}**, before the 12:30 offer deadline.")
@@ -74,14 +78,14 @@ with plan_tab:
                 hovertemplate="%{x}:00 — %{y:.1f} USD/MWh<extra></extra>")
     fig.add_hline(y=cost, line_dash="dash", line_color=ORANGE, annotation_text=f"your cost {cost}",
                   annotation_position="top left")
-    show_actual = st.toggle("Show what actually happened")
+    show_actual = st.toggle("Show what actually happened", value=st.query_params.get("reveal") == "1")
     if show_actual:
         fig.add_scatter(x=today.index, y=today["actual"], name="actual", mode="lines+markers",
                         line=dict(color=BLUE, width=2.5))
     fig.update_layout(title="Forecast price per hour (green: block to offer, gray: above cost but outside it, red: below cost)",
                       xaxis_title="hour", yaxis_title="USD/MWh", height=400, margin=dict(t=50, b=40),
                       showlegend=show_actual, legend=dict(orientation="h", y=-0.2))
-    fig.update_xaxes(dtick=1)
+    fig.update_xaxes(dtick=1, range=[-0.6, 23.6])
     st.plotly_chart(fig, width="stretch")
 
     if p["block"]:
@@ -95,12 +99,11 @@ with plan_tab:
         o = outcome(today, cost, min_hours, start_cost)
         st.subheader("How the decision turned out (profit at the actual prices, USD per MW)")
         a, b, c = st.columns(3)
-        a.metric("Following the model", f"{o['model']['profit']:,.0f}", block_text(o["model"]["block"]),
-                 delta_color="off")
-        b.metric("Following same hour yesterday", f"{o['same hour yesterday']['profit']:,.0f}",
-                 block_text(o["same hour yesterday"]["block"]), delta_color="off")
-        c.metric("Best possible (perfect foresight)", f"{o['perfect foresight']['profit']:,.0f}",
-                 block_text(o["perfect foresight"]["block"]), delta_color="off")
+        sources = [("Following the model", "model"), ("Following same hour yesterday", "same hour yesterday"),
+                   ("Best possible (perfect foresight)", "perfect foresight")]
+        for column, (label, name) in zip((a, b, c), sources):
+            column.metric(label, f"{o[name]['profit']:,.0f}")
+            column.caption(f"runs: {block_text(o[name]['block'])}")
         error = (today[FORECAST] - today["actual"]).abs().mean()
         st.markdown(f"The forecast's average error on this day: {error:.1f} USD/MWh.")
 

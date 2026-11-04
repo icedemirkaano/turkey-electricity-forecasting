@@ -11,8 +11,6 @@ Usage (from the repository root, after evaluate_test and posthoc_retrain --every
     python -m scripts.evaluate_timeseries_test
 """
 
-import os
-
 import pandas as pd
 
 from src.config import PROCESSED_DIR, ROOT, TIMEZONE

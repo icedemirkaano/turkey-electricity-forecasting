@@ -17,7 +17,8 @@ import json
 import pandas as pd
 
 from src.config import PROCESSED_DIR, ROOT
-from src.evaluation import BASELINES, ROUND2_TEST_START, baseline_forecast, mae, period, retrain_windows, scores
+from src.evaluation import (BASELINES, ROUND2_TEST_START, baseline_forecast, mae, period, retrain_windows, scores,
+                            sign_test)
 from src.features import FEATURE_SETS, build_features
 from src.retraining import retrained_forecasts
 
@@ -58,7 +59,7 @@ def main():
     print(summary[["hours", "mae", "rmse", "mae_floor_hours", "floor_hours", "mae_cap_hours", "cap_hours"]]
           .round(2).to_string())
 
-    weeks = frame.index.to_period("W-SUN").start_time.strftime("%Y-%m-%d")
+    weeks = frame.index.tz_localize(None).to_period("W-SUN").start_time.strftime("%Y-%m-%d")
     by_week = frame.groupby(weeks).apply(lambda w: pd.Series({n: mae(w["actual"], w[n]) for n in forecasts}))
     by_week.to_csv(OUT_DIR / "test_scores_by_week.csv", index_label="week from")
     print("\n=== MAE per week (weeks start on Monday)")
@@ -66,7 +67,8 @@ def main():
 
     daily = frame.groupby(frame.index.normalize()).apply(
         lambda d: mae(d["actual"], d[f"{CHOSEN} (chosen)"]) < mae(d["actual"], d[REFERENCE]))
-    print(f"\ndays where the chosen model beats '{REFERENCE}': {int(daily.sum())} of {len(daily)}")
+    print(f"\ndays where the chosen model beats '{REFERENCE}': {int(daily.sum())} of {len(daily)} "
+          f"(sign test, one-sided p = {sign_test(int(daily.sum()), len(daily)):.4f})")
     frame.to_csv(OUT_DIR / "test_predictions.csv", index_label="time")
     print(f"saved {OUT_DIR}")
 

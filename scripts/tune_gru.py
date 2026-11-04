@@ -68,7 +68,7 @@ def objective(data: FoldData):
     def run(trial):
         params = space(trial)
         fold_maes = []
-        for step, (fold, train, val) in enumerate(data.get(params["seq_hours"])):
+        for step, (_, train, val) in enumerate(data.get(params["seq_hours"])):
             pred = predict_gru(fit_gru(train, SEARCH_SEED, settings_from(params)), val)
             fold_maes.append(mae(val.target_series(), pred))
             trial.report(float(np.mean(fold_maes)), step)

@@ -61,7 +61,7 @@ def objective(name: str, folds: list):
     def run(trial):
         params = SEARCH_SPACES[name](trial)
         fold_maes = []
-        for step, (fold, X_tr, y_tr, X_val, y_val) in enumerate(folds):
+        for step, (_, X_tr, y_tr, X_val, y_val) in enumerate(folds):
             fold_maes.append(mae(y_val, predict(fit(name, X_tr, y_tr, **params), X_val)))
             trial.report(float(np.mean(fold_maes)), step)
             if trial.should_prune():

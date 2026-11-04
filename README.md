@@ -12,7 +12,7 @@ Capstone project of the Workintech Data Science bootcamp (November 2026).
   - MAE **7.74 USD/MWh**, against 11.37 for the same hour yesterday: **32% less error**.
   - Better on 24 of 32 days. The chance of that record if both forecasts were equally good is about 0.35% (sign test).
 - **Decision:** a power plant must fix before the auction which block to offer, how much gas to nominate and whether to staff a start. With these forecasts, a 1 MW plant earned more than with the baseline at every fuel cost from 20 to 80 USD/MWh, up to +1,308 USD in 32 days.
-- **Demo:** a Streamlit app for the plant operator (`app/`), on the test days.
+- **Demo:** a Streamlit app for the plant operator (`app/`), on the test days, in English or Turkish.
 
 ![One test week, hour by hour](reports/figures/round2/01_test_week_hourly.png)
 
@@ -411,7 +411,7 @@ The path from data to decision, one module per step:
 | Models | `src/models.py`, `src/tuning.py`, `src/retraining.py` | model catalogue, Optuna search, weekly retraining loop |
 | Other model families | `src/timeseries.py`, `src/lear.py`, `src/gru.py`, `src/sequences.py` | SARIMAX / Prophet / Holt-Winters, LEAR, GRU |
 | Decisions | `src/plant.py`, `src/business.py` | plant run decision; load shifting |
-| Demo | `src/demo.py`, `app/streamlit_app.py` | calculations behind the app; the app |
+| Demo | `src/demo.py`, `src/demo_texts.py`, `app/streamlit_app.py` | calculations behind the app; its English and Turkish texts; the app |
 
 Scripts by purpose:
 
@@ -469,7 +469,7 @@ python -m scripts.make_demo_forecasts          # round-2 model, weekly retrained
 streamlit run app/streamlit_app.py             # opens the app at http://localhost:8501
 ```
 
-A day can be opened directly, with the actual prices shown: `http://localhost:8501/?day=2026-10-11&reveal=1`.
+The language (English / Türkçe) is chosen at the top of the sidebar. A day can be opened directly, with the actual prices shown and in Turkish: `http://localhost:8501/?day=2026-10-11&reveal=1&lang=tr`.
 
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
 

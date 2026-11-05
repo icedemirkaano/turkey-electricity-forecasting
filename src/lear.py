@@ -1,4 +1,4 @@
-"""LEAR: the lasso-estimated autoregressive model of the price forecasting literature (post-hoc, instructor's question).
+"""LEAR: the lasso-estimated autoregressive model of the price forecasting literature (post-hoc, review question).
 
 Follows the open-source implementation of Lago, Marcjasz, De Schutter & Weron (2021, Applied Energy 293, 116983),
 epftoolbox/models/_lear.py:

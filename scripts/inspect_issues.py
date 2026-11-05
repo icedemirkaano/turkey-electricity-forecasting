@@ -1,4 +1,4 @@
-"""Details of the open data-quality issues, to discuss with the instructor.
+"""Details of the open data-quality issues, to discuss in the project review.
 
 Local part (read-only, no API):  python -m scripts.inspect_issues
 Ask EPİAŞ again for the gap days: python -m scripts.inspect_issues --refetch

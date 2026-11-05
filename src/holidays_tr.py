@@ -1,4 +1,4 @@
-"""Official public holidays in Turkey, 2024-2026, entered by hand (as advised by the instructor).
+"""Official public holidays in Turkey, 2024-2026, entered by hand (as advised in the project review).
 
 Covers the modelling period only (training starts 2024-01-01); other years are not filled in.
 

@@ -10,7 +10,7 @@ import pandas as pd
 # so a model could not use them at forecast time today -> not carried into the hourly table.
 WIND_BAND_COLUMNS = ["quarter1", "quarter2", "quarter3", "quarter4"]
 
-# Gap filling (instructor's advice: same-hour average). Only PAST days are used -> no leakage.
+# Gap filling (decision: same-hour average). Only PAST days are used -> no leakage.
 # Load plan: consumption depends on the weekday -> same hour, same weekday, previous 4 weeks.
 LOAD_PLAN_FILL_LAGS_DAYS = [7, 14, 21, 28]
 # Wind forecast: weather does not follow the weekday -> same hour, previous 7 days.
@@ -26,7 +26,7 @@ SIGNED_COLUMNS = ["importExport"]
 def clip_negative_generation(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     """Set negative generation values to 0.
 
-    Decision (with the instructor, after plotting): the negative solar values (99 hours, all at night,
+    Decision (after plotting): the negative solar values (99 hours, all at night,
     -0.01 to -2.98 MWh) and the negative monitored wind values (5 hours, March 2025) are measurement
     noise around zero, not real negative output. Columns in SIGNED_COLUMNS are left untouched.
 

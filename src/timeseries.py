@@ -1,4 +1,4 @@
-"""Classical time series models for the next-day PTF (added on the instructor's request, after the test).
+"""Classical time series models for the next-day PTF (added on review request, after the test).
 
 Three families:
   - Holt-Winters exponential smoothing (additive, statsmodels): level + seasonal pattern, updated with every new price

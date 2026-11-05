@@ -1,4 +1,4 @@
-"""ADDED AFTER THE TEST (instructor's request): the best classical time series model of each family on the test period.
+"""ADDED AFTER THE TEST (review request): the best classical time series model of each family on the test period.
 
 The models were chosen on the 2025 validation quarters only (scripts/evaluate_timeseries.py) and are scored
 here with the same two protocols as XGBoost, so that the rows are comparable:

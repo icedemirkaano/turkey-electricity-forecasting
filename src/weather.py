@@ -1,4 +1,4 @@
-"""Temperature forecasts for the price model (round 2, instructor's request).
+"""Temperature forecasts for the price model (round 2, review request).
 
 Source: Open-Meteo Historical Forecast API (https://open-meteo.com/en/docs/historical-forecast-api), archived
 weather forecasts from 2022 on, free for non-commercial use, no account needed. The archive stitches the first

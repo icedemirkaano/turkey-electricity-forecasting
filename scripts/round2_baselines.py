@@ -1,6 +1,6 @@
-"""Round 2, instructor's question: is "same hour yesterday" a fair bar? Saturday forecast from Friday looks odd.
+"""Round 2, review question: is "same hour yesterday" a fair bar? Saturday forecast from Friday looks odd.
 
-Adds a third simple forecast suggested by the instructor, the same hour on the same weekday last year (364 days =
+Adds a third simple forecast suggested in the review, the same hour on the same weekday last year (364 days =
 52 weeks earlier, so a Saturday is compared with a Saturday), and breaks the error down by day of week.
 Simple forecasts compared with the chosen model (weekly retrained HGB, round 2):
   - same hour yesterday      (lag 24 h)    Saturday <- Friday

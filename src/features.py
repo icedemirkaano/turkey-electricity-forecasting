@@ -16,7 +16,7 @@ from src.dataset import COLUMN_AVAILABILITY
 from src.holidays_tr import holiday_flags
 
 TARGET = "ptf_usd"
-MODEL_START = "2024-01-01"  # instructor's decision: 2023 left out of modelling (lags may still reach into 2023)
+MODEL_START = "2024-01-01"  # project decision: 2023 left out of modelling (lags may still reach into 2023)
 
 # Minimum lag (hours) a column needs before it may be used for a target hour, by availability label
 MIN_LAG = {"known_ahead": 0, "past_only": 48, "target": 24}
@@ -35,7 +35,7 @@ FEATURE_SPEC = [
     ("gen_solar", 168),
 ]
 
-# Round 2 (instructor: temperature; error analysis: hydro). The round-1 results above stay as they are.
+# Round 2 (review: temperature; error analysis: hydro). The round-1 results above stay as they are.
 FEATURE_SPEC_V2 = FEATURE_SPEC + [
     ("temperature_forecast", 0),   # mean of five cities, archived forecast (src/weather.py)
     ("temperature_heating", 0),    # derived: degrees below 18 °C (heating demand), helps linear models

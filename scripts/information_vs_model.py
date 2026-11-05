@@ -1,4 +1,4 @@
-"""POST-HOC experiment (instructor's question, after the test): why did XGBoost beat the time series models?
+"""POST-HOC experiment (review question, after the test): why did XGBoost beat the time series models?
 
 Two possible reasons, separated with a 2 x 2 comparison on the 2025 validation quarters (the test is NOT used):
                        own past prices only          all inputs

@@ -1,6 +1,6 @@
 """Score the classical time series models (src/timeseries.py) on the same walk-forward folds as all other models.
 
-Added on the instructor's request, after the test of the chosen model. Model choice here uses only the
+Added on review request, after the test of the chosen model. Model choice here uses only the
 2025 validation quarters; the test period is NOT touched by this script.
 Output: reports/results/timeseries_walk_forward.csv
 Usage (from the repository root):

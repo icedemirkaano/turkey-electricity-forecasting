@@ -154,9 +154,12 @@ with value_tab:
     chart.add_scatter(x=curve.index, y=curve["same hour yesterday"], name=t("baseline"), mode="lines+markers",
                       line=dict(color=GRAY, width=3), hovertemplate=t("hover_captured") + "<extra></extra>")
     chart.add_vline(x=n_hours, line_dash="dot", line_color=BLUE)
+    # %100'ün ne demek olduğu grafikte de görünsün: fiyatları önceden bilen biri
+    chart.add_hline(y=100, line_dash="dash", line_color=GRAY, line_width=1,
+                    annotation_text=t("perfect_line"), annotation_position="bottom left")
     chart.update_layout(title=t("captured_chart", days=val["days"]), xaxis_title=t("hours_axis"), yaxis_title="%",
                         height=340, margin=dict(t=50, b=40), legend=dict(orientation="h", y=-0.25),
-                        yaxis=dict(range=[50, 100]))
+                        yaxis=dict(range=[50, 103]))
     chart.update_xaxes(dtick=1)
     st.plotly_chart(chart, width="stretch")
 

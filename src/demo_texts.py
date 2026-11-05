@@ -74,6 +74,7 @@ TEXTS = {
         "per_year": "Kept up for a year, that is about **{amount} USD per MW** more saving than following yesterday "
                     "(the measured daily average × 365).",
         "captured_chart": "Share of the possible saving captured, by hours per day (validation, {days} days)",
+        "perfect_line": "100% = knowing the prices in advance",
         "hover_captured": "%{{x}} hours: %{{y:.0f}}%",
         "hours_axis": "hours per day",
         "trust_intro": "All {days} demo days, each forecast made on the day before and compared with the actual "
@@ -151,14 +152,15 @@ TEXTS = {
                        "koyuyor; iş o saatlerin gerçek fiyatını ödüyor. Gösterilen: MWh başına ödenen ortalama fiyat. "
                        "Düşük olan iyidir.",
         "value_test": "Ekim 2026 ({days} gün, hiçbir model seçiminde görülmedi)",
-        "value_validation": "Validation, 2025–2026'nın 7 çeyreği ({days} gün)",
+        "value_validation": "Doğrulama dönemi, 2025–2026'nın 7 çeyreği ({days} gün)",
         "avg_paid": "ödenen ortalama fiyat, USD/MWh",
         "captured": "Mümkün tasarrufun yakalanan payı: model **{model}**, dünün aynı saati **{baseline}** "
                     "(%100 = fiyatları bilmek).",
         "day_count": "Gün gün: model **{model} gün** daha ucuz, dünün aynı saati {baseline} gün, {equal} gün eşit.",
         "per_year": "Bir yıl sürse dünü izlemeye göre MW başına yaklaşık **{amount} USD** daha fazla tasarruf "
                     "(ölçülen günlük ortalama × 365).",
-        "captured_chart": "Mümkün tasarrufun yakalanan payı, günde gereken saate göre (validation, {days} gün)",
+        "captured_chart": "Mümkün tasarrufun yakalanan payı, günde gereken saate göre (doğrulama, {days} gün)",
+        "perfect_line": "%100 = fiyatları önceden bilmek",
         "hover_captured": "%{{x}} saat: yüzde %{{y:.0f}}",
         "hours_axis": "günde saat",
         "trust_intro": "Demonun {days} gününün tamamı: her tahmin bir gün önce yapıldı, sonra gerçek fiyatlarla "

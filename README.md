@@ -20,7 +20,7 @@ Capstone project of the Workintech Data Science bootcamp (November 2026).
 The project went through two rounds:
 
 - **Round 1:** the first model, trained once, failed its test in a long low-price period.
-- **Round 2:** after the instructor's review, temperature and hydro inputs were added and the model was retrained every week. The model was chosen again on a new split and tested once more.
+- **Round 2:** after a project review, temperature and hydro inputs were added and the model was retrained every week. The model was chosen again on a new split and tested once more.
 
 Both rounds are reported in full below, failures included.
 
@@ -229,7 +229,7 @@ In October the model was clearly better at the price level (MAE), but only sligh
 
 ### Round 2: temperature, hydro and a new split
 
-> ⚠️ Started **after** the round-1 test and the instructor's review (questions: why no temperature, why not beat the dummy, shouldn't time series models do better). The round-1 results above stay as they were reported. Round 2 has its own split and its own one-time test; every variant that was tried is reported.
+> ⚠️ Started **after** the round-1 test and a project review, which asked three questions: why no temperature, why not beat the simple baselines, and shouldn't time series models do better? The round-1 results above stay as they were reported. Round 2 has its own split and its own one-time test; every variant that was tried is reported.
 
 **What changed**
 
@@ -318,7 +318,7 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 - The test error matches validation: 7.74 on the test vs 7.73 on validation, so tuning and model choice were not overly optimistic.
 - October 2026 had already been shown in the round-1 demo, with a different model. No round-2 choice used it.
 
-**Is "same hour yesterday" a fair bar?** It forecasts a Saturday from a Friday and a Monday from a Sunday. The instructor suggested comparing with the same day last year instead. So the model was compared with four simple forecasts (`scripts/round2_baselines.py`, no retraining):
+**Is "same hour yesterday" a fair bar?** It forecasts a Saturday from a Friday and a Monday from a Sunday. A natural alternative keeps the day type, for example the same day last year. So the model was compared with four simple forecasts (`scripts/round2_baselines.py`, no retraining):
 
 | Simple forecast | Validation MAE (21 months) | Test MAE (October) | Test days the model is better |
 |---|---|---|---|
@@ -328,7 +328,7 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 | Same weekday last year (52 weeks earlier) | 18.59 | 13.93 | 30 of 32 |
 | Same hour last week | 11.90 | 15.02 | 31 of 32 |
 
-- The instructor was right about day-type changes. Same hour yesterday is worst on Mondays (validation 18.98) and Sundays (13.49), and close to the model on Fridays (7.60 vs 7.16).
+- Day-type changes do hurt the simple bar. Same hour yesterday is worst on Mondays (validation 18.98) and Sundays (13.49), and close to the model on Fridays (7.60 vs 7.16).
 - Same weekday last year is the weakest on validation: the price level moved too much in a year. The spring-2026 floor prices had no counterpart in 2025.
 - The weekday-aware rule was built from the validation table, so it is the strongest simple forecast a planner could use. The model is still 18% better on the test.
 - The model handles day types itself: its inputs include the day of week, holidays and last week's price.

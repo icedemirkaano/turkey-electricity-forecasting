@@ -11,6 +11,7 @@ Capstone project of the Workintech Data Science bootcamp (November 2026).
 - **Test** (1 October – 1 November 2026, days no choice used, scored once):
   - MAE **7.74 USD/MWh**, against 11.37 for the same hour yesterday: **32% less error**.
   - Better on 24 of 32 days. The chance of that record if both forecasts were equally good is about 0.35% (sign test).
+- **Against published work:** relative MAE 0.52 on the test (0.65 on validation), in the band of the literature's benchmark models (0.38–0.57) and close to comparable Turkish work (0.63).
 - **Decision:** a power plant must fix before the auction which block to offer, how much gas to nominate and whether to staff a start. With these forecasts, a 1 MW plant earned more than with the baseline at every fuel cost from 20 to 80 USD/MWh, up to +1,308 USD in 32 days.
 - **Demo:** a Streamlit app for the plant operator (`app/`), on the test days, in English or Turkish.
 
@@ -317,6 +318,53 @@ HistGradientBoosting and XGBoost are practically equal (0.11 apart); the pre-set
 - The test error matches validation: 7.74 on the test vs 7.73 on validation, so tuning and model choice were not overly optimistic.
 - October 2026 had already been shown in the round-1 demo, with a different model. No round-2 choice used it.
 
+**Is "same hour yesterday" a fair bar?** It forecasts a Saturday from a Friday and a Monday from a Sunday. The instructor suggested comparing with the same day last year instead. So the model was compared with four simple forecasts (`scripts/round2_baselines.py`, no retraining):
+
+| Simple forecast | Validation MAE (21 months) | Test MAE (October) | Test days the model is better |
+|---|---|---|---|
+| **Model (weekly retrained)** | **7.72** | **7.74** | – |
+| Weekday-aware: last week on Sundays and Mondays, yesterday otherwise | 9.78 | 9.40 | 23 of 32 |
+| Same hour yesterday | 11.03 | 11.37 | 24 of 32 |
+| Same weekday last year (52 weeks earlier) | 18.59 | 13.93 | 30 of 32 |
+| Same hour last week | 11.90 | 15.02 | 31 of 32 |
+
+- The instructor was right about day-type changes. Same hour yesterday is worst on Mondays (validation 18.98) and Sundays (13.49), and close to the model on Fridays (7.60 vs 7.16).
+- Same weekday last year is the weakest on validation: the price level moved too much in a year. The spring-2026 floor prices had no counterpart in 2025.
+- The weekday-aware rule was built from the validation table, so it is the strongest simple forecast a planner could use. The model is still 18% better on the test.
+- The model handles day types itself: its inputs include the day of week, holidays and last week's price.
+- "Validation MAE" here is the mean over all hours (7.72). The 7.73 above is the mean of the seven quarterly scores.
+
+![Error by day of week, model vs simple forecasts](reports/figures/round2/06_error_by_weekday.png)
+
+**How does this compare with published work?** MAE cannot be compared across markets directly: currencies, price levels and volatility differ. The price forecasting literature uses the relative MAE (rMAE): the model's MAE divided by the MAE of the same hour last week, on the same period (Lago et al., 2021). Below 1 beats that simple forecast; 0.5 halves its error.
+
+| Forecast | Market, period | rMAE | MAE |
+|---|---|---|---|
+| DNN ensemble (Lago et al., 2021) | Germany (EPEX), 2016–2018 test | 0.38 | 3.44 |
+| DNN ensemble (Lago et al., 2021) | Nord Pool, 2016–2018 test | 0.40 | 1.67 |
+| DNN ensemble (Lago et al., 2021) | PJM (USA), 2016–2018 test | 0.44 | 2.78 |
+| **This model, round-2 test** | **Turkey, October 2026** | **0.52** | **7.74 USD/MWh** |
+| DNN ensemble (Lago et al., 2021) | France (EPEX), 2016–2018 test | 0.53 | 3.91 |
+| DNN ensemble (Lago et al., 2021) | Belgium (EPEX), 2016–2018 test | 0.57 | 5.82 |
+| Open-source Turkish project (production ensemble) | Turkey, 2024–2026 walk-forward | 0.63* | 7.04–7.15 USD/MWh |
+| **This model, round-2 validation** | **Turkey, 2025Q1–2026Q3** | **0.65** | **7.72 USD/MWh** |
+| LEAR, retrained weekly (this project) | Turkey, 2025Q1–2026Q3 | 0.80 | 9.47 USD/MWh |
+
+- **The results sit in the band of the literature's benchmark models.** Those were tested on calmer years and recalibrated every day; this model is retrained weekly and its validation includes the 2026 regime change.
+- **They are close to the only comparable Turkish work found** (same market, same unit, similar period): 0.65 vs 0.63 and 7.7 vs 7.0–7.2 USD/MWh. Such numbers are realistic: a model leaking future information would look implausibly better.
+- **Against this project's own baseline,** same hour yesterday, the rMAE is 0.70 (validation) and 0.68 (test).
+- **Caveats:**
+  - \* The Turkish project does not define its baseline ("naive-2").
+  - Lago et al.'s MAE values are in each market's own currency (EUR or USD). The values are from Table 3 of the arXiv version.
+  - The LEAR value here is the mean of quarterly MAEs divided by the weekly naive's.
+  - Commercial PTF forecasts are sold in Turkey, but no independently verified accuracy figures were found, so they are not compared.
+  - Several Turkish papers report MAPE, which cannot be used here: 18 test hours had a price of 0.
+
+Sources:
+
+- [Lago, Marcjasz, De Schutter, Weron (2021)](https://arxiv.org/abs/2008.08004), *Forecasting day-ahead electricity prices*, Applied Energy 293, 116983, and [epftoolbox](https://github.com/jeslago/epftoolbox).
+- [Open-source Turkish project](https://github.com/beratkrts/electricity-price-forecasting-turkish-day-ahead-market).
+
 **Answers to the review questions**
 
 - **Temperature:** added and measured. It brings a small but consistent gain (7.87 → 7.73 on validation).
@@ -419,7 +467,7 @@ Scripts by purpose:
 - **Data checks:** `profile_raw`, `check_*`, `inspect_*`, `plot_*` (one-off checks behind the cleaning decisions).
 - **Round 1:** `evaluate_baselines`, `compare_models`, `tune_models`, `evaluate_gru`, `train_final_xgboost`, `evaluate_test`, `analyse_errors`.
 - **Round 1, post-hoc:** `posthoc_retrain`, `evaluate_timeseries`, `evaluate_timeseries_test`, `information_vs_model`, `tune_gru`, `evaluate_load_shifting`.
-- **Round 2:** `round2_compare`, `tune_models --round 2`, `round2_weekly`, `round2_importance`, `round2_test`, `evaluate_plant`, `round2_figures`.
+- **Round 2:** `round2_compare`, `tune_models --round 2`, `round2_weekly`, `round2_importance`, `round2_test`, `round2_baselines`, `evaluate_plant`, `round2_figures`.
 - **Demo:** `make_demo_forecasts`.
 
 ## How to run
@@ -458,6 +506,7 @@ python -m scripts.tune_models --round 2        # Optuna search on the 7 quarters
 python -m scripts.round2_weekly                # final choice with weekly retraining
 python -m scripts.round2_importance            # ablation and permutation importance
 python -m scripts.round2_test                  # the one-time round-2 test
+python -m scripts.round2_baselines             # model vs four simple forecasts, by day of week
 python -m scripts.evaluate_plant               # business layer: plant run decision with the round-2 test forecasts
 python -m scripts.round2_figures               # the round-2 figures in this README
 ```

@@ -5,8 +5,9 @@
   03  which inputs the chosen model relies on (permutation importance, validation)
   04  the plant decision: extra profit from the model over the baseline, by plant cost
   05  example day (Sunday 11 October 2026): forecasts, actual price and the block each forecast chose
+  06  error by day of week: the model vs yesterday, last week and the same weekday last year (validation)
 Output: reports/figures/round2/
-Usage (from the repository root, after the round-2 scripts and evaluate_plant):
+Usage (from the repository root, after the round-2 scripts, evaluate_plant and round2_baselines):
     python -m scripts.round2_figures
 """
 
@@ -124,11 +125,30 @@ def example_day(frame):
     return fig
 
 
+def by_weekday():
+    table = pd.read_csv(ROUND2 / "baselines_by_weekday.csv", index_col=["period", "weekday"]).loc["validation"]
+    series = [("model (weekly retrained)", "model", plots.ORANGE),
+              ("same hour yesterday", "same hour yesterday", plots.GRAY),
+              ("same hour last week", "same hour last week", plots.BLUE),
+              ("same weekday last year", "same weekday last year", plots.INK)]
+    fig, ax = plt.subplots(figsize=(12, 4.4), facecolor=plots.SURFACE)
+    x, width = np.arange(len(table)), 0.2
+    for i, (column, label, color) in enumerate(series):
+        ax.bar(x + (i - 1.5) * width, table[column], width, color=color, label=label)
+    ax.set_xticks(x, table.index)
+    ax.set_ylim(0, table.max().max() * 1.22)
+    ax.legend(frameon=False, ncol=4, loc="upper left")
+    plots.style(ax, "Error by day of the forecast day: yesterday fails when the day type changes, the model "
+                "does not (validation, 21 months)", "MAE (USD/MWh)")
+    fig.tight_layout()
+    return fig
+
+
 def main():
     frame = test_predictions()
     figures = {"01_test_week_hourly": test_week(frame), "02_retraining_by_quarter": retraining_by_quarter(),
                "03_permutation_importance": importance(), "04_plant_extra_profit_by_cost": plant_by_cost(),
-               "05_example_day_2026_10_11": example_day(frame)}
+               "05_example_day_2026_10_11": example_day(frame), "06_error_by_weekday": by_weekday()}
     for name, fig in figures.items():
         print("saved", plots.save(fig, name, subfolder="round2"))
         plt.close(fig)

@@ -3,7 +3,7 @@
 from datetime import date
 from string import Formatter
 
-from src.demo_texts import LANGUAGES, TEXTS, long_date, number, short_date, text
+from src.demo_texts import LANGUAGES, TEXTS, hour_text, long_date, number, percent, short_date, text
 
 
 def placeholders(template: str) -> set:
@@ -29,8 +29,13 @@ def test_plotly_placeholders_survive_formatting():
 
 
 def test_text_fills_placeholders():
-    assert text("tr", "your_cost", cost=50) == "maliyetiniz 50"
-    assert text("en", "block", first=17, end=24, hours=7) == "17:00–24:00 (7 hours)"
+    assert text("tr", "hits", n=4) == "En ucuz 4 saati bulma"
+    assert text("en", "hours_used", hours="10:00–14:00") == "hours: 10:00–14:00"
+
+
+def test_percent_and_hours():
+    assert percent(0.775, "en") == "78%" and percent(0.775, "tr") == "%78"
+    assert hour_text([(10, 14), (18, 19)]) == "10:00–14:00, 18:00–19:00"
 
 
 def test_dates_per_language():

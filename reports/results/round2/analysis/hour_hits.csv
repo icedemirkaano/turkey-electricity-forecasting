@@ -1,0 +1,25 @@
+period,forecast,k,hours,hit rate
+validation,model,3,cheapest,0.658307210031348
+validation,model,3,priciest,0.8338557993730408
+validation,model,4,cheapest,0.6810344827586207
+validation,model,4,priciest,0.8205329153605015
+validation,model,6,cheapest,0.7403343782654127
+validation,model,6,priciest,0.8168756530825496
+validation,same hour yesterday,3,cheapest,0.5402298850574712
+validation,same hour yesterday,3,priciest,0.7377220480668756
+validation,same hour yesterday,4,cheapest,0.5799373040752351
+validation,same hour yesterday,4,priciest,0.7253134796238244
+validation,same hour yesterday,6,cheapest,0.6541274817136886
+validation,same hour yesterday,6,priciest,0.7330198537095088
+test,model,3,cheapest,0.7083333333333333
+test,model,3,priciest,0.875
+test,model,4,cheapest,0.734375
+test,model,4,priciest,0.8515625
+test,model,6,cheapest,0.7239583333333334
+test,model,6,priciest,0.78125
+test,same hour yesterday,3,cheapest,0.6458333333333333
+test,same hour yesterday,3,priciest,0.8541666666666665
+test,same hour yesterday,4,cheapest,0.703125
+test,same hour yesterday,4,priciest,0.8203125
+test,same hour yesterday,6,cheapest,0.640625
+test,same hour yesterday,6,priciest,0.734375

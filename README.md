@@ -12,8 +12,9 @@ Capstone project of the Workintech Data Science bootcamp (November 2026).
   - MAE **7.74 USD/MWh**, against 11.37 for the same hour yesterday: **32% less error**.
   - Better on 24 of 32 days. The chance of that record if both forecasts were equally good is about 0.35% (sign test).
 - **Against published work:** relative MAE 0.52 on the test (0.65 on validation), in the band of the literature's benchmark models (0.38–0.57) and close to comparable Turkish work (0.63).
-- **Decision:** a power plant must fix before the auction which block to offer, how much gas to nominate and whether to staff a start. With these forecasts, a 1 MW plant earned more than with the baseline at every fuel cost from 20 to 80 USD/MWh, up to +1,308 USD in 32 days.
-- **Demo:** a Streamlit app for the plant operator (`app/`), on the test days, in English or Turkish.
+- **PTF analysis:** tomorrow's daily mean is missed by 4.40 USD/MWh (yesterday's prices: 7.42), the type of day is right on 78% of days, and an error band built from past errors held 77.5% of test hours (aim 80%).
+- **What it is worth:** a site with 4 flexible hours a day, placed in the cheapest hours by the forecast, captures 84% of the possible saving (yesterday's prices: 73%; 638 validation days), about 3,900 USD per MW a year more than following yesterday.
+- **Demo:** a Streamlit app that reads tomorrow's price as a bulletin (`app/`), on the test days, in English or Turkish.
 
 ![One test week, hour by hour](reports/figures/round2/01_test_week_hourly.png)
 
@@ -215,17 +216,11 @@ The demo uses days that no training run or model choice had seen. Following the 
 
 In October the model was clearly better at the price level (MAE), but only slightly better at picking the cheapest hours: yesterday's daily pattern was already a good guide to today's.
 
-**The demo app now uses the round-2 model** (below): tuned HistGradientBoosting, retrained every Monday, 1 October – 1 November 2026. Its forecasts are identical to the round-2 test. The app is built for one user and one decision: the operator of a power plant deciding, before the 12:30 deadline, whether to prepare to run tomorrow and which block to offer (see *Business value, round 2*).
+**The demo app now uses the round-2 model** (below): tuned HistGradientBoosting, retrained every Monday, 1 October – 1 November 2026. Its forecasts are identical to the round-2 test. The app reads tomorrow's price for an energy analyst, before the 12:30 deadline (see *PTF analysis, round 2*):
 
-- **Tomorrow's plan:**
-  - The user sets the plant's fuel cost, its minimum run time and the cost of a start.
-  - For a chosen day, the app shows the forecast as it looked on the day before. The block to offer is green, hours below the cost are red.
-  - It recommends a block with its expected profit, or "stay off".
-  - On request it reveals the actual prices and the profit of following the model, yesterday's prices and perfect foresight.
-- **Can I trust it?:**
-  - Forecast error over all demo days against the same-hour-yesterday baseline.
-  - The plant's profit over the period for the chosen cost.
-  - The extra profit from the model at every plant cost.
+- **Tomorrow's price:** a one-sentence bulletin; daily and tariff-period means; the cheapest n and priciest 4 hours; the day type; the forecast with its error band; the known-ahead inputs next to today's. On request it reveals the actual prices and what the n hours cost by following the model, yesterday's prices, perfect foresight or not shifting.
+- **What the cheap hours are worth:** the flexible job over October and over the 638 validation days, for the job length set in the sidebar.
+- **Can I trust it?:** MAE, band coverage, cheapest-hour hit rate, day-type agreement and the error by hour of day, against the same-hour-yesterday baseline.
 
 ### Round 2: temperature, hydro and a new split
 
@@ -371,60 +366,59 @@ Sources:
 - **Beating the dummy and the baseline:** what mattered was how often the model is retrained, not the inputs. Trained once per quarter, no model beat the baseline in 2026Q2. Retrained weekly, the chosen model beat it in every validation quarter and in the test.
 - **Time series models:** SARIMAX, Prophet, Holt-Winters and LEAR were all tried. LEAR, the strongest, is competitive in stable periods (2025: 7.16, vs 7.15–7.27 for the untuned tree models and 6.88 for tuned XGBoost). It breaks when the market regime changes (2026Q2). Tree models handle the thresholds in the price (floor, cap, low-price periods) better.
 
-### Business value, round 2: should a power plant prepare to run tomorrow?
+### PTF analysis, round 2: what tomorrow's price looks like, and what that is worth
 
-> Designed after the round-2 test result was known. No model was retrained; the saved round-2 test forecasts (1 October – 1 November 2026) were reused.
+> Designed after the round-2 test result was known. No model was trained: everything is computed from the saved forecasts of the chosen model (validation: the 7 quarters 2025Q1–2026Q3, 638 days; test: 1 October – 1 November 2026, 32 days). The error band and the day-type thresholds were set on validation only, so the test is a check (`src/analysis.py`, `scripts/ptf_analysis.py`).
 
-Load shifting (above) only needs the **order** of tomorrow's hours, and even yesterday's prices give a good order. A power plant's decision also needs the **level**: is tomorrow's price above my cost?
+A price forecast is used as an analysis of tomorrow, read before the 12:30 deadline: how expensive is the day, which hours are cheap, how sure can I be? The hourly MAE does not answer these questions directly, so each one is measured on its own, always next to the same-hour-yesterday baseline.
 
-**The decision.** A 1 MW plant has a variable cost of X USD/MWh (fuel). Hour by hour, the day-ahead auction decides by itself whether the plant runs: an hourly offer at X is accepted only when the price is higher. What the auction cannot decide is what must be fixed on day D, **before** the prices are known:
+**Tomorrow's profile.** Mean price of the day and of the three tariff periods (day 06–17, peak 17–22, night 22–06; EPDK decision 6561). Error of each mean, test (validation in brackets), USD/MWh:
 
-- which block of hours to offer;
-- how much gas to nominate;
-- whether to staff and prepare a start-up.
+| Mean of | Model | Same hour yesterday |
+|---|---|---|
+| The whole day | **4.40** (4.87) | 7.42 (7.54) |
+| Day 06–17 | **6.06** (6.61) | 13.47 (11.66) |
+| Peak 17–22 | **4.18** (4.80) | 5.59 (6.76) |
+| Night 22–06 | **4.86** (5.33) | 5.61 (5.97) |
+| Highest − lowest hour | 13.36 (11.60) | 15.37 (13.42) |
 
-That pre-auction decision is simulated (`src/plant.py`), as a simplified unit commitment of a gas plant:
+The daily mean is missed by about half the hourly error, because hourly errors partly cancel within a day. The intraday spread is the weakest measure.
 
-- The plant runs in at most one block of consecutive hours per day, at least 4 hours long. Each start costs 50 USD.
-- It picks the block where the forecast margin (forecast price − X) adds up to the most. If that block does not cover the start cost, it stays off.
-- It then earns the **actual** price in the hours it runs.
+**Which hours are cheap or expensive.** Per day, the share of the hours picked from the forecast that really were among the day's cheapest (or priciest) 4. Hours tied with the 4th value count as hits, so a day with eight zero-price hours is fair. A random pick would find about 17%.
 
-**References:**
+| | Model, validation | Yesterday, validation | Model, test | Yesterday, test |
+|---|---|---|---|---|
+| Cheapest 4 hours | **68%** | 58% | **73%** | 70% |
+| Priciest 4 hours | **82%** | 73% | **85%** | 82% |
+| Priciest hour, within ±1 hour | 64% | 66% | 69% | **84%** |
 
-- **Perfect foresight:** the best block by actual prices.
-- **Always run:** no forecast needed.
+On the test the cheapest-hours gap is small: 3 points over 128 picks is about 4 hours. The evidence is the 638 validation days. The single priciest hour is **not** found better than by yesterday's prices; the evening price often stays flat for 3–4 hours, so this measure is unstable and the app shows the 4 priciest hours instead.
 
-**Costs and assumptions.** The plant's cost is not known, so X is swept from 20 to 90 USD/MWh. In October the median price was 61.8. The start cost and the minimum run time are also assumptions; other values are reported below.
+**How sure can I be: the error band.** For each hour of the day, the 10th and 90th percentile of the model's validation errors are added to the forecast (the lower edge is not allowed below the price floor of 0). On validation the band holds 79.9% of the hours, by construction. **On the test it held 77.5%**, 71–83% from week to week, with a mean width of 24 USD/MWh. The band is wide and skewed downward at midday (15:00: −22 / +14), because midday is where the model errs most: when solar pushes the price to zero, the drop is often deeper than forecast.
 
-Profit over the 32 test days (USD, 1 MW, minimum run 4 h, start cost 50 USD):
+**What kind of day.** Days are typed by the midday (10–16) mean price divided by the evening (17–23) mean: *deep midday dip* (below 30%), *midday dip* (30–70%), *flat day* (above 70%). The type of tomorrow, read from the forecast, was right on **78% of test days** (yesterday's prices: 69%) and 78% of validation days (63%). The model's mistakes are between neighbouring types; on the test, a deep dip was never taken for a flat day.
 
-| Plant cost (USD/MWh) | Perfect foresight | **Model** | Same hour yesterday | Always run | **Model − baseline** |
+![The three day types: mean price profile](reports/figures/round2/07_day_types.png)
+
+**What it is worth: flexible consumption.** The analysis is turned into money with a decision that depends on the price alone, no cost assumption: a site with a flexible job of n hours of 1 MW a day (a pump, a cold store, a mill) runs it in the n cheapest hours of tomorrow by the forecast and pays the **actual** prices (`src/business.py`, the same rules as the round-1 load shifting above). 4 hours a day, average price paid (USD/MWh):
+
+| | No shifting (day's mean) | **Model** | Same hour yesterday | Knowing the prices | Captured share: model / yesterday |
 |---|---|---|---|---|---|
-| 20 | 28,593 | 28,591 | 28,164 | 28,546 | +428 |
-| 30 | 21,252 | 21,098 | 20,449 | 20,866 | +649 |
-| 40 | 14,272 | 13,802 | 12,494 | 13,186 | **+1,308** |
-| 50 | 8,064 | 7,535 | 6,539 | 5,506 | +996 |
-| 60 | 3,410 | 2,477 | 2,071 | −2,174 | +406 |
-| 70 | 710 | 446 | 233 | −9,854 | +213 |
-| 80 | 7 | −20 | −84 | −17,534 | +63 |
+| Validation, 638 days | 56.43 | **36.82** | 39.52 | 33.22 | **84% / 73%** |
+| Test, 32 days | 59.25 | **36.37** | 38.11 | 33.11 | **88% / 81%** |
 
-- **The model earned more than the baseline at every cost from 20 to 80 USD/MWh.** The gain was 60–1,300 USD per MW over the 32 days.
-- **The expectation written before the run was only partly right.** It said the gap would be largest at costs near the typical price (50–70). In USD it was largest at 40–50, where the plant runs many hours and many hours are at stake.
-- **A forecast matters where the decision is close.** For a cheap plant (20), always running is already 99.8% of perfect. At a cost of 60, always running loses money (−2,174), while the model earns 2,477.
-- **The gain comes from a few unusual days.** At a cost of 50, the model and the baseline made the same decision on 15 of 32 days. The model was better on 12 and worse on 5. Example, Sunday 11 October: midday prices fell to 0. The baseline copied Saturday's prices and ran all day, losing 146 USD. The model ran only the evening block and earned 105 USD; perfect foresight would have earned 113.
+- With 8 hours a day the captured share is 86% / 72% (validation) and 87% / 74% (test). On validation the model is ahead for every job length from 1 to 12 hours.
+- Day by day, 4 hours: on validation the model paid less on **355** days, yesterday on 164, equal on 119. Shifting cost more than not shifting on 4 days with the model and 23 with yesterday's prices.
+- On the test the day count is even (12 / 12, 8 equal); most of the test gain comes from two Sundays (18 October, 1 November). One month cannot separate the two forecasts day by day; the validation days can.
+- Kept up for a year, the validation average is about **3,900 USD per MW** more saving than following yesterday's prices (10.79 USD a day × 365, 4 hours a day).
 
-![Sunday 11 October 2026: forecasts and the block each one chose](reports/figures/round2/05_example_day_2026_10_11.png)
+![Share of the possible saving captured, by hours per day](reports/figures/round2/04_cheap_hours_captured.png)
 
-![Extra profit from the model over the baseline, by plant cost](reports/figures/round2/04_plant_extra_profit_by_cost.png)
-- **Other run rules give the same picture.** With start costs of 0, 50 or 150 USD and a minimum run of 4 or 8 hours, the model earned more than the baseline in 15 of 16 combinations. In the 16th, cost 75 with a start cost of 150, all three forecasts kept the plant off. For a plant near the typical price with an expensive start (cost 65, start 150), both lost money: the model −214 USD, the baseline −691. A safety margin before starting could help, but it must be set on validation data, not on this test.
+**Example, Sunday 18 October.** On Saturday the midday prices (10–15) had stayed at 28–55 USD; on Sunday they fell to 0 from 10:00 to 14:00. Yesterday's prices put the 4 hours at 04, 05, 07 and 12 and paid 137.8 USD; the model chose 10–13 and paid 1.6 USD, the same hours as perfect foresight. The model typed the day as a deep midday dip, which it was. The next day shows the other side: on Monday 19 October yesterday's prices (Sunday's dip) were right and the model missed the dip, paying 155.0 USD against 103.3.
 
-Simplifications:
+![Sunday 18 October 2026: the 4 cheapest hours by each forecast](reports/figures/round2/05_example_day_2026_10_18.png)
 
-- one block per day (a real plant can start twice);
-- the plant does not move the price;
-- one month of data.
-
-The result is a comparison between forecasts under the same rules, not a plant's real profit.
+Simplifications: the site does not move the price; shifting itself costs nothing; the hours need not be consecutive. The result is a comparison between forecasts under the same rules, not a site's real bill.
 
 ### Limitations
 
@@ -458,7 +452,7 @@ The path from data to decision, one module per step:
 | Evaluation | `src/evaluation.py` | walk-forward folds, test periods, metrics, baselines, sign test |
 | Models | `src/models.py`, `src/tuning.py`, `src/retraining.py` | model catalogue, Optuna search, weekly retraining loop |
 | Other model families | `src/timeseries.py`, `src/lear.py`, `src/gru.py`, `src/sequences.py` | SARIMAX / Prophet / Holt-Winters, LEAR, GRU |
-| Decisions | `src/plant.py`, `src/business.py` | plant run decision; load shifting |
+| Analysis and decisions | `src/analysis.py`, `src/business.py` | tomorrow's profile, hour hit rate, error band, day type; flexible consumption |
 | Demo | `src/demo.py`, `src/demo_texts.py`, `app/streamlit_app.py` | calculations behind the app; its English and Turkish texts; the app |
 
 Scripts by purpose:
@@ -467,7 +461,7 @@ Scripts by purpose:
 - **Data checks:** `profile_raw`, `check_*`, `inspect_*`, `plot_*` (one-off checks behind the cleaning decisions).
 - **Round 1:** `evaluate_baselines`, `compare_models`, `tune_models`, `evaluate_gru`, `train_final_xgboost`, `evaluate_test`, `analyse_errors`.
 - **Round 1, post-hoc:** `posthoc_retrain`, `evaluate_timeseries`, `evaluate_timeseries_test`, `information_vs_model`, `tune_gru`, `evaluate_load_shifting`.
-- **Round 2:** `round2_compare`, `tune_models --round 2`, `round2_weekly`, `round2_importance`, `round2_test`, `round2_baselines`, `evaluate_plant`, `round2_figures`.
+- **Round 2:** `round2_compare`, `tune_models --round 2`, `round2_weekly`, `round2_importance`, `round2_test`, `round2_baselines`, `ptf_analysis`, `round2_figures`.
 - **Demo:** `make_demo_forecasts`.
 
 ## How to run
@@ -507,7 +501,7 @@ python -m scripts.round2_weekly                # final choice with weekly retrai
 python -m scripts.round2_importance            # ablation and permutation importance
 python -m scripts.round2_test                  # the one-time round-2 test
 python -m scripts.round2_baselines             # model vs four simple forecasts, by day of week
-python -m scripts.evaluate_plant               # business layer: plant run decision with the round-2 test forecasts
+python -m scripts.ptf_analysis                 # PTF analysis and flexible consumption (also the demo files)
 python -m scripts.round2_figures               # the round-2 figures in this README
 ```
 
@@ -515,10 +509,11 @@ Demo (October 2026 onwards):
 
 ```bash
 python -m scripts.make_demo_forecasts          # round-2 model, weekly retrained -> app/data/demo_forecasts.csv
+python -m scripts.ptf_analysis                 # band, validation results and inputs for the app -> app/data/
 streamlit run app/streamlit_app.py             # opens the app at http://localhost:8501
 ```
 
-The language (English / Türkçe) is chosen at the top of the sidebar. A day can be opened directly, with the actual prices shown and in Turkish: `http://localhost:8501/?day=2026-10-11&reveal=1&lang=tr`.
+The language (English / Türkçe) is chosen at the top of the sidebar. A day can be opened directly, with the actual prices shown and in Turkish: `http://localhost:8501/?day=2026-10-18&reveal=1&lang=tr`.
 
 Fetching requires a free EPİAŞ Transparency Platform account. The script can be re-run safely: complete months are skipped and incomplete ones are downloaded again.
 
@@ -529,7 +524,7 @@ Complete. Delivered:
 - Data pipeline: download, cleaning and the hourly dataset.
 - Exploratory analysis: [`notebooks/01_ptf_eda.ipynb`](notebooks/01_ptf_eda.ipynb).
 - Price models: classical ML, deep learning, classical time series and LEAR, with two rounds of choice and test. See [`notebooks/02_ptf_models.ipynb`](notebooks/02_ptf_models.ipynb).
-- Two decision layers: load shifting and the plant run decision.
+- PTF analysis of the next day (profile, cheap and expensive hours, error band, day type) and its value for flexible consumption.
 - A local demo app.
 
 Imbalance cost was left out, because it depends on quantity forecast errors and this project forecasts prices only.
@@ -540,8 +535,7 @@ Possible extensions:
 - combining the tree models with LEAR;
 - hydro reservoir inputs;
 - a consumption-weighted temperature;
-- a safety margin for the plant decision, set on validation;
-- two starts per day;
+- a band from quantile models instead of past errors;
 - publishing the demo online.
 
 ## Data source

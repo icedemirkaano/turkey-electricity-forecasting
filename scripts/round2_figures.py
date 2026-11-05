@@ -3,11 +3,12 @@
   01  one test week (5-11 October 2026): hourly actual price vs the chosen model and the baseline
   02  why retraining matters: MAE per validation quarter, trained once per quarter vs every Monday
   03  which inputs the chosen model relies on (permutation importance, validation)
-  04  the plant decision: extra profit from the model over the baseline, by plant cost
-  05  example day (Sunday 11 October 2026): forecasts, actual price and the block each forecast chose
+  04  what the cheap hours are worth: share of the possible saving captured, by hours per day (validation)
+  05  example day (Sunday 18 October 2026): forecasts, band, actual price and the 4 hours each forecast chose
   06  error by day of week: the model vs yesterday, last week and the same weekday last year (validation)
+  07  the three day types: mean actual price profile of each (validation)
 Output: reports/figures/round2/
-Usage (from the repository root, after the round-2 scripts, evaluate_plant and round2_baselines):
+Usage (from the repository root, after the round-2 scripts, round2_baselines and ptf_analysis):
     python -m scripts.round2_figures
 """
 
@@ -21,11 +22,13 @@ import pandas as pd
 
 from src import plots
 from src.config import ROOT, TIMEZONE
-from src.plant import best_block
+from src import analysis as an
+from src.demo import cheapest
 
 ROUND2 = ROOT / "reports" / "results" / "round2"
 MODEL, BASELINE = "hist gradient boosting (chosen)", "same hour yesterday"
-EXAMPLE_DAY, EXAMPLE_COST, MIN_HOURS, START_COST = "2026-10-11", 50, 4, 50
+EXAMPLE_DAY, N_HOURS = "2026-10-18", 4
+ANALYSIS = ROUND2 / "analysis"
 LABELS = {"ptf_usd_lag24": "price, same hour yesterday", "net_load_forecast": "net load forecast (load - wind)",
           "ptf_usd_lag168": "price, same hour last week", "gen_solar_lag48": "solar generation, 2 days ago",
           "gen_solar_lag168": "solar generation, last week", "hour": "hour of day", "day_of_week": "day of week",
@@ -88,17 +91,22 @@ def importance():
     return fig
 
 
-def plant_by_cost():
-    plant = pd.read_csv(ROUND2 / "business" / "plant_by_cost.csv")
-    profit = plant.pivot(index="cost", columns="source", values="profit")
-    gain = (profit["model"] - profit["same hour yesterday"]).loc[20:80]
+def captured_by_hours():
+    table = pd.read_csv(ANALYSIS / "shifting.csv").query("period == 'validation'")
+    captured = table.pivot(index="n_hours", columns="forecast", values="captured_%")
     fig, ax = plt.subplots(figsize=(11, 4.2), facecolor=plots.SURFACE)
-    ax.bar(gain.index, gain, width=3.6, color=[plots.ORANGE if c == EXAMPLE_COST else plots.BLUE for c in gain.index])
-    for cost, value in gain.items():
-        ax.text(cost, value + 15, f"{value:,.0f}", ha="center", fontsize=9, color=plots.MUTED)
-    ax.set_xticks(gain.index)
-    plots.style(ax, "Plant decision: extra profit from the model over the baseline, 32 days, 1 MW",
-                "USD", "plant's fuel cost, USD/MWh")
+    ax.plot(captured.index, captured["model"], color=plots.ORANGE, linewidth=2.5, marker="o", label="model")
+    ax.plot(captured.index, captured["same hour yesterday"], color=plots.GRAY, linewidth=2.5, marker="o",
+            label="same hour yesterday")
+    for n in [4, 8]:
+        for name in ["model", "same hour yesterday"]:
+            ax.text(n, captured.loc[n, name] + 1.5, f"{captured.loc[n, name]:.0f}%", ha="center", fontsize=9,
+                    color=plots.MUTED)
+    ax.set_xticks(captured.index)
+    ax.set_ylim(50, 100)
+    ax.legend(frameon=False, ncol=2, loc="lower right")
+    plots.style(ax, "Flexible consumption in the cheapest hours: share of the possible saving captured "
+                "(100% = knowing the prices; validation, 638 days)", "%", "hours needed per day")
     fig.tight_layout()
     return fig
 
@@ -106,21 +114,45 @@ def plant_by_cost():
 def example_day(frame):
     day = frame.loc[EXAMPLE_DAY]
     hours = np.arange(24)
+    band = pd.read_csv(ANALYSIS / "band.csv", index_col="time")
+    forecast = day[MODEL].to_numpy()
+    low, high = np.clip(forecast + band["low"].to_numpy(), 0, None), forecast + band["high"].to_numpy()
+    actual = day["actual"].to_numpy()
     fig, ax = plt.subplots(figsize=(12, 4.6), facecolor=plots.SURFACE)
+    ax.fill_between(hours, low, high, color=plots.ORANGE, alpha=0.12, linewidth=0, label="band (80% of past hours)")
+    ax.plot(hours, actual, color=plots.INK, linewidth=2.2, marker="o", markersize=4, label="actual price")
+    ax.plot(hours, forecast, color=plots.ORANGE, linewidth=1.6, label="model forecast")
+    ax.plot(hours, day[BASELINE].to_numpy(), color=plots.GRAY, linewidth=1.6, linestyle="--",
+            label="same hour yesterday")
     for prices, name, color, row in [(day[MODEL], "model", plots.ORANGE, -6),
                                      (day[BASELINE], "same hour yesterday", plots.GRAY, -12)]:
-        first, last = best_block(prices.to_numpy() - EXAMPLE_COST, MIN_HOURS, START_COST)
-        ax.plot([first - 0.4, last + 0.4], [row, row], color=color, linewidth=6, solid_capstyle="butt")
-        ax.text(last + 0.6, row, f"runs: {name}", va="center", fontsize=9, color=plots.MUTED)
-    ax.plot(hours, day["actual"], color=plots.INK, linewidth=2.2, marker="o", markersize=4, label="actual price")
-    ax.plot(hours, day[MODEL], color=plots.ORANGE, linewidth=1.6, label="model forecast")
-    ax.plot(hours, day[BASELINE], color=plots.GRAY, linewidth=1.6, linestyle="--", label="same hour yesterday")
-    ax.axhline(EXAMPLE_COST, color=plots.BLUE, linewidth=1, linestyle=":", label=f"plant cost {EXAMPLE_COST}")
+        chosen = cheapest(pd.Series(prices.to_numpy()), N_HOURS)
+        ax.scatter(chosen, [row] * len(chosen), color=color, marker="s", s=60)
+        ax.text(23.6, row, f"{name}: pays {actual[chosen].sum():.1f} USD", va="center", ha="right", fontsize=9,
+                color=plots.MUTED)
     ax.set_xticks(hours)
     ax.set_ylim(-16, 100)
     ax.legend(frameon=False, ncol=4, loc="upper left", bbox_to_anchor=(0, -0.12))
-    plots.style(ax, "Sunday 11 October 2026: midday prices fell to 0; the baseline ran all day, the model "
-                "only the evening", "USD/MWh", "hour")
+    plots.style(ax, "Sunday 18 October 2026: the 4 cheapest hours by each forecast (squares) and what they cost "
+                "at the actual prices, 1 MW", "USD/MWh", "hour")
+    fig.tight_layout()
+    return fig
+
+
+def day_types():
+    from scripts.ptf_analysis import load_periods
+    actual = an.daily_profile(load_periods()["validation"]["actual"])
+    types = an.day_type(actual)
+    fig, ax = plt.subplots(figsize=(11, 4.2), facecolor=plots.SURFACE)
+    for (name, _), color in zip(an.DAY_TYPES, [plots.ORANGE, plots.BLUE, plots.GRAY]):
+        ax.plot(range(24), actual[types == name].mean(), color=color, linewidth=2.5,
+                label=f"{name} ({(types == name).mean():.0%} of days)")
+    ax.axvspan(9.5, 15.5, color=plots.GRID, alpha=0.5, linewidth=0)
+    ax.axvspan(16.5, 22.5, color=plots.GRID, alpha=0.25, linewidth=0)
+    ax.set_xticks(range(24))
+    ax.legend(frameon=False, ncol=3, loc="upper left", bbox_to_anchor=(0, -0.12))
+    plots.style(ax, "Three day types by the midday (10-16) / evening (17-23) price ratio: mean profile, "
+                "validation 638 days", "USD/MWh", "hour")
     fig.tight_layout()
     return fig
 
@@ -147,8 +179,9 @@ def by_weekday():
 def main():
     frame = test_predictions()
     figures = {"01_test_week_hourly": test_week(frame), "02_retraining_by_quarter": retraining_by_quarter(),
-               "03_permutation_importance": importance(), "04_plant_extra_profit_by_cost": plant_by_cost(),
-               "05_example_day_2026_10_11": example_day(frame), "06_error_by_weekday": by_weekday()}
+               "03_permutation_importance": importance(), "04_cheap_hours_captured": captured_by_hours(),
+               "05_example_day_2026_10_18": example_day(frame), "06_error_by_weekday": by_weekday(),
+               "07_day_types": day_types()}
     for name, fig in figures.items():
         print("saved", plots.save(fig, name, subfolder="round2"))
         plt.close(fig)

@@ -8,7 +8,7 @@ Capstone project of the Workintech Data Science bootcamp (November 2026).
 
 - **Forecast:** the 24 hourly prices of tomorrow, made before the 12:30 offer deadline from 21 inputs known at that moment (past prices, EPİAŞ load and wind forecasts, temperature forecasts, past generation, calendar).
 - **Model:** tuned HistGradientBoosting, **retrained every Monday**. Chosen by a rule fixed in advance on 21 months of walk-forward validation.
-- **Test** (1 October – 1 November 2026, days no choice used, scored once):
+- **Test** (1 October – 1 November 2026, days not used for any choice, scored once):
   - MAE **7.74 USD/MWh**, against 11.37 for the same hour yesterday: **32% less error**.
   - Better on 24 of 32 days. The chance of that record if both forecasts were equally good is about 0.35% (sign test).
 - **Against published work:** relative MAE 0.52 on the test (0.65 on validation), in the band of the literature's benchmark models (0.38–0.57) and close to comparable Turkish work (0.63).
@@ -543,3 +543,7 @@ Possible extensions:
 EPİAŞ Transparency Platform — Enerji Piyasaları İşletme A.Ş. Data used with attribution, as permitted by the platform.
 
 Weather data by [Open-Meteo.com](https://open-meteo.com) (CC BY 4.0).
+
+## License
+
+The code is released under the [MIT License](LICENSE). The data sources above keep their own terms.
